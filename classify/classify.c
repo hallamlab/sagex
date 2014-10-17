@@ -172,9 +172,10 @@ void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , dou
 	double cut ; 
 	if( k < 2 ) 
 	{
+		double cumulativeP = 1.0 - alpha ; 
 		double rate = 2.0 ; 
 		double shape = ((double) subDim ) / 2.0 ;  
-		dyadicInvGam ( &shape , &rate , &alpha , &eps , &maxIter , &cut ) ;  
+		dyadicInvGam ( &shape , &rate , &cumulativeP , &eps , &maxIter , &cut ) ;  
 	}
 	else
 	{   

@@ -170,14 +170,15 @@ void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , dou
 	fprintf( stderr , "Designing cut-off\n" ) ;
 	// Calc cut-off w.r.t. ref. dist. 
 	double cut ; 
-	if( k == 1 ) 
+	if( k < 2 ) 
 	{
+		double cumulativeP = 1.0 - alpha ; 
 		double rate = 2.0 ; 
 		double shape = ((double) subDim ) / 2.0 ;  
-		dyadicInvGam ( &shape , &rate , &alpha , &eps , &maxIter , &cut ) ;  
+		dyadicInvGam ( &shape , &rate , &cumulativeP , &eps , &maxIter , &cut ) ;  
 	}
 	else
-	{ // TODO for k > 2 estimates are nan !!!  
+	{   
 int i , j ; fprintf( stderr , "p: " ) ; for( i = 0 ; i < k ; i++ ) { fprintf( stderr , " %e" , p[i] ) ; } fprintf( stderr , "\n" ) ; 
 fprintf( stderr , "mu:\n" ) ; for( i = 0 ; i < subDim ; i++ ){ for( j = 0 ; j < k ; j++ ) fprintf( stderr , "%e " , mu[ i + subDim * j ] ) ; fprintf( stderr , "\n" ) ; } 
 int ll; for( ll = 0 ; ll < k ; ll++ ){ fprintf( stderr , "Cov %i:\n" , ll ) ; for( i = 0 ; i < subDim ; i++ ){ for( j = 0 ; j < subDim ; j++ ) fprintf( stderr , "%e " , cov[ i + subDim * j + subDim * subDim * ll ] ) ; fprintf( stderr , "\n" ) ; } }
