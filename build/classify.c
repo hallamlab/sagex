@@ -258,7 +258,6 @@ fprintf( stderr , "Cut: %e\n" , cut ) ;
 				status[i] = 0 ; 
 			else
 				status[i] = 1 ; 
-fprintf( stderr , "dtmp: %e, cut: %e, status: %i\n" , dtmp , cut , status[i] ) ; 
 		}
 	}
 	
@@ -275,7 +274,6 @@ fprintf( stderr , "dtmp: %e, cut: %e, status: %i\n" , dtmp , cut , status[i] ) ;
 	int *categoryCount = NULL ; 
 	if( out == NULL ) // only report kmers 
 	{
-fprintf( stderr , "DEBUG, reporting kmers, subDim: %i, gmN: %i, sagN: %i.\n" , subDim , gmN , sagN ) ; 
 		for( i = 0 ; i < subDim ; i++ ) 
 			printf( "PC_%i\t" , i ) ; 
 		printf( "status\n" ) ; 

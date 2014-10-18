@@ -219,7 +219,6 @@ printf( "DEBUG chopping SAG...\n" ) ;
 		hitPtr = &hits ; 
         classify ( SAG.sequence , SAG.N_contigs , metBag.sequence , metBag.N_contigs , Alpha , Beta , threads , eps , itMin , itMax , chopSize , overlap , k , verbose , hitPtr );
 	
-fprintf( stderr , "DEBUG: !\n" ) ; 
 	if( kmerFlag > 0 ) 
 		return 0 ; 
 	
