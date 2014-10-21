@@ -102,7 +102,7 @@ void posixCounter( char **fasta , int n , int threads , int chopSize , int overl
 		pargs[i].end = (i+1) * n / threads ; 
 		if( i + 1 == threads ) 
 			pargs[i].end = n ; 
-		pargs[i].chopSize = chopSize ; 
+		pargs[i].chopSize = chopSize ; // TODO set -1 as flag for proportional kmers  
 		pargs[i].overlap = overlap ; 
 		pargs[i].out = &mats[i] ; 
 		pargs[i].cols = &cols[i] ; 

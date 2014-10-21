@@ -7,8 +7,8 @@ BlastTable::BlastTable( char * input ) {
         exit(0);
     }
     else {
-        qseqid = (char **) malloc (1 * sizeof(char));
-        sseqid = (char **) malloc (1 * sizeof(char));
+        qseqid = (char **) malloc (1 * sizeof(char*));
+        sseqid = (char **) malloc (1 * sizeof(char*));
         pident = (double *) malloc (1 * sizeof(double));
         pident[0] = 1;
         length = (int *) malloc (1 * sizeof(int));
@@ -21,7 +21,7 @@ char **str_slicer(char *s, const char *delim, int * slices_size = 0) {
     string substring;
     int delim_size = strlen(delim);
     int str_len = t.length();
-    char **slices = (char **) malloc ((str_len + 1) * sizeof(char));
+    char **slices = (char **) malloc ((str_len + 1) * sizeof(char*));
     int x, n, cur_len;
     n = 0;
     slices[n] = (char *) malloc (1 * sizeof(char));
@@ -74,10 +74,10 @@ int BlastTable::parseTable() {
     char **fields;
     char * line = (char *) malloc (1 * sizeof(char));
     long int x, str_len, query_Nchar, subject_Nchar;    
-    int line_Nelements = 0;
+    int line_Nelements = 0; 
     if (blast_ptr.good())
         getline( blast_ptr, s);
-    else {
+    else { 
         fprintf(stderr, "Something is wrong with the blast output table. Exiting now!\n");
         exit(0);
     }

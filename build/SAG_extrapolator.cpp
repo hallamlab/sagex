@@ -169,26 +169,26 @@ int main( int argc, char *argv[] ) {
     }
     
     checkArgs(hflag, argc);
-
-    FastaParser Metagenome(Gm);
-    Metagenome.parse_fasta();
+	
+    FastaParser Metagenome(Gm); 
+    Metagenome.parse_fasta(); 
     //cout << "Metagenome size = " << Metagenome.genome_length << endl;
 
-    FastaParser SAG(input);
-    SAG.parse_fasta();
+    FastaParser SAG(input); 
+    SAG.parse_fasta(); 
     //cout << "SAG size = " << SAG.genome_length << endl;
     
     metBagger metBag;
     
     if (blastout != NULL) {
 
-        BlastTable blastclass(blastout);
+        BlastTable blastclass(blastout); 
         blastclass.parseTable(); 
     
-        free(blastclass.qseqid);
+        free(blastclass.qseqid); 
 
         metBag.get_Gm_scaffolds(blastclass.sseqid, blastclass.pident, blastclass.length, blastclass.N_hits, Metagenome.header, Metagenome.sequence, Metagenome.N_contigs, pID, minAL);
-
+	
         //cout << "MetBag size = " << metBag.genome_length << endl;
     }
     else {
