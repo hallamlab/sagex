@@ -20,7 +20,7 @@ int checkArgs(int hflag, int argc) {
 \tThe BLAST alignment file of the SAG to the Metagenome. This must be in output format 6 \n\
 \n\t\tBLAST-specific options:\n\
 -p: \n \
-\tThe minimum percentage of identical sequence between the SAG and metagenomic contigs for the contig to be included in the analysis. [DEFAULT = 85]\n\
+\tThe minimum percentage of identical sequence between the SAG and metagenomic contigs for the contig to be included in the analysis. Integer type. [DEFAULT = 85]\n\
 -a: \n \
 \tAn integer representing the minimum number of base-pairs of the SAG aligned to the metagenome to be considered a good hit. [DEFAULT = 2000]\n\
 -k: \n \
@@ -43,7 +43,9 @@ int checkArgs(int hflag, int argc) {
 \tThe maximum number of iterations for Eigen value calculation. [DEFAULT = 1000]\n\
 \n\t\tOther options:\n\
 -X: \n\
-\tReport kmers in an R-readable format instead of hit names.\n\
+\tReport kmer PCA in an R-readable format instead of a fasta.\n\
+-Y: \n\
+\tReport kmers in an R-readable format instead of a fasta. Supersedes -X.\n\
 -v: \n\
 \tTurns on verbosity.\n\
 -t \n\
@@ -93,11 +95,12 @@ int main( int argc, char *argv[] ) {
     int itMin = 10;
     int itMax = 100000;
     int threads = 1;
+    int kmerPCA = 0 ; 
     int kmerFlag = 0 ; 
     int verbose = 0 ; 
     int c;
     opterr = 0;
-    while ((c = getopt (argc, argv, "i:G:b:o:p:a:c:x:A:B:E:m:M:t:k:hXv")) != -1) {
+    while ((c = getopt (argc, argv, "i:G:b:o:p:a:c:x:A:B:E:m:M:t:k:hXYv")) != -1) {
         switch (c) {
             case 'i':
                 input = optarg;
@@ -145,8 +148,11 @@ int main( int argc, char *argv[] ) {
                 k = atoi(optarg);
                 break;
             case 'X':
-                kmerFlag = 1;
+                kmerPCA = 1;
                 break;
+            case 'Y':
+                kmerFlag = 1 ; 
+                break ; 
             case 'v':
                 verbose = 1;
                 break;
@@ -213,13 +219,13 @@ printf( "DEBUG chopping SAG...\n" ) ;
 	
         int *hits = NULL; 
 	int **hitPtr ; 
-	if( kmerFlag > 0 ) 
+	if( kmerPCA > 0 ) 
 		hitPtr = NULL ; 
 	else
 		hitPtr = &hits ; 
-        classify ( SAG.sequence , SAG.N_contigs , metBag.sequence , metBag.N_contigs , Alpha , Beta , threads , eps , itMin , itMax , chopSize , overlap , k , verbose , hitPtr );
+        classify ( SAG.sequence , SAG.N_contigs , metBag.sequence , metBag.N_contigs , Alpha , Beta , threads , eps , itMin , itMax , chopSize , overlap , k , verbose , kmerFlag , hitPtr );
 	
-	if( kmerFlag > 0 ) 
+	if( kmerPCA > 0 || kmerFlag > 0 ) 
 		return 0 ; 
 	
 	for( int i = 0 ; i < metBag.N_contigs ; i++ ) 

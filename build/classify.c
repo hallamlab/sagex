@@ -15,9 +15,10 @@
 // chopsSize : 
 // overlap : 
 // k : number of gaussians in the gaussian mixture model modelling the SAG 
-// verbose : describe process in stderr if > 0
+// verbose : describe process in stderr if > 0 
+// kmerFlag : returns kmers to stdout if > 0 
 // out : a pointer to be allocated with the int-names of contigs which have been classified as IN the SAG 
-void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , double beta , int threads , double eps , int minIter , int maxIter , int chopSize , int overlap , int k , int verbose , int **out ) 
+void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , double beta , int threads , double eps , int minIter , int maxIter , int chopSize , int overlap , int k , int verbose , int kmerFlag , int **out ) 
 {
 	int subDim = 3 ; 
 	int cols = 256 ; 
@@ -25,6 +26,8 @@ void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , dou
 	int tmp ; 
 	int *names = NULL ; 
 	double eigenEps = 0.00000000001 ;  
+	
+	int i , j ; 
 	
 	fprintf( stderr , "Calculating kmers for SAG\n" ) ; // TODO only report when verbose is activated 
 	// Calculate kmer matrix for the SAG 
@@ -66,6 +69,25 @@ void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , dou
 	// Append matrices 
 	double *bigK = (double*) malloc( cols * rows * sizeof(double) ) ; 
 	appendRows ( gmKmers , sagKmers , &gmN , &sagN , &cols , bigK ) ; 
+	
+	if( kmerFlag > 0 ) // report kmers and quit 
+	{
+		for( i = 0 ; i < gmN ; i++ ) 
+		{
+			printf( "gm.%i" , i ) ; 
+			for( j = 0 ; j < cols ; j++ ) 
+				printf( "\t%e" , bigK[ i + (gmN + sagN) * j ] ) ; 
+			printf( "\n" ) ; 
+		}
+		for( i = 0 ; i < sagN ; i++ ) 
+		{
+			printf( "sag.%i" , i ) ; 
+			for( j = 0 ; j < cols ; j++ ) 
+				printf( "\t%e" , bigK[ gmN + i + (gmN + sagN) * j ] ) ; 
+			printf( "\n" ) ; 
+		}
+		return ; 
+	}
 	
 	/*
 	int k , l ; 
@@ -194,7 +216,6 @@ fprintf( stderr , "Cut: %e\n" , cut ) ;
 	double *covEigVals = (double*) malloc( subDim * sizeof(double) ) ; 
 	qrEig ( cov , &subDim , &eps, &minIter , &maxIter , covEigVals , covEigVecs ) ; 
 	double *diagMat = (double*) malloc( subDim * subDim * sizeof(double) ) ; 
-	int i , j ; 
 	for( i = 0 ; i < subDim ; i++ )
 	{
 		for( j = 0 ; j < subDim ; j++ ) 
@@ -321,7 +342,6 @@ fprintf( stderr , "Cut: %e\n" , cut ) ;
 			}
 		}
 	}
-fprintf( stderr , "DEBUG 1\n" ) ; 
 
 	// free unused memory  
 	free( sagKmers_int ) ; 

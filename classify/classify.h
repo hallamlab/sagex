@@ -21,8 +21,9 @@
 // overlap : 
 // k : number of gaussians in the gaussian mixture model modelling the SAG 
 // verbose : describe process in stderr if > 0 
+// kmerFlag : returns kmers to stdout if > 0 
 // out : a pointer to be allocated with the int-names of contigs which have been classified as IN the SAG 
-void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , double beta , int threads , double eps , int minIter , int maxIter , int chopSize , int overlap , int k , int verbose , int **out ) ; 
+void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , double beta , int threads , double eps , int minIter , int maxIter , int chopSize , int overlap , int k , int verbose , int kmerFlag , int **out ) ; 
 
 // Standardizes the columns of a matrix 
 void colStandardize( double *mat , int *rows , int *cols , double *out ) ; 
