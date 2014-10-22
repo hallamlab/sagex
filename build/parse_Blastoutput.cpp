@@ -48,11 +48,11 @@ char **str_slicer(char *s, const char *delim, int * slices_size = 0) {
 }
 
 int BlastTable::enterFields(char **fields, long int x, long int query_Nchar, long int subject_Nchar) {
-        qseqid = (char **) realloc (qseqid, query_Nchar * sizeof(char));
+        qseqid = (char **) realloc (qseqid, query_Nchar * sizeof(char*));
 //        cerr << "DEBUG 1" << endl;
         qseqid[x] = (char *) malloc ((strlen(fields[0]) + 1) * sizeof(char));
         strcpy(qseqid[x], fields[0]);
-        sseqid = (char **) realloc (sseqid, subject_Nchar * sizeof(char));
+        sseqid = (char **) realloc (sseqid, subject_Nchar * sizeof(char*));
 //        cerr << "DEBUG 2" << endl;
         sseqid[x] = (char *) malloc ((strlen(fields[1]) + 1) * sizeof(char));
         strcpy(sseqid[x], fields[1]);

@@ -321,6 +321,7 @@ fprintf( stderr , "Cut: %e\n" , cut ) ;
 			}
 		}
 	}
+fprintf( stderr , "DEBUG 1\n" ) ; 
 
 	// free unused memory  
 	free( sagKmers_int ) ; 

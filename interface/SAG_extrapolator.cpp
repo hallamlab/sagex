@@ -20,7 +20,7 @@ int checkArgs(int hflag, int argc) {
 \tThe BLAST alignment file of the SAG to the Metagenome. This must be in output format 6 \n\
 \n\t\tBLAST-specific options:\n\
 -p: \n \
-\tThe minimum percentage of identical sequence between the SAG and metagenomic contigs for the contig to be included in the analysis. [DEFAULT = 85]\n\
+\tThe minimum percentage of identical sequence between the SAG and metagenomic contigs for the contig to be included in the analysis. Integer type. [DEFAULT = 85]\n\
 -a: \n \
 \tAn integer representing the minimum number of base-pairs of the SAG aligned to the metagenome to be considered a good hit. [DEFAULT = 2000]\n\
 -k: \n \
