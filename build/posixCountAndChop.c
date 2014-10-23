@@ -98,7 +98,7 @@ void posixCounter( char **fasta , int n , int threads , int chopSize , int overl
 	for( i = 0 ; i < threads ; i++ ) 
 	{
 		pargs[i].fasta = fasta ; 
-		pargs[i].start = i * n / threads ; 
+		pargs[i].start = i * n / threads ; // TODO this is a terrible way to distribute work   
 		pargs[i].end = (i+1) * n / threads ; 
 		if( i + 1 == threads ) 
 			pargs[i].end = n ; 

@@ -1,12 +1,12 @@
 
 dyn.load("crossValidate.so") 
 
-crossValidate = function(k=1,p=85,a=2000)  
+crossValidate = function(k=1,p=85,a=2000,A=0.5,B=0.8)  
 {
 	gmN = 658928 + 1000
 	sagN = 1000
 	
-	.C("crossValidate",as.integer(k),as.integer(p),as.integer(a))  
+	.C("crossValidate",as.integer(k),as.integer(p),as.integer(a),as.double(A),as.double(B))  
 	try( {
 	out = as.matrix(read.table("tmp6")) 
 	.C( "cleanUp" ) 

@@ -29,7 +29,8 @@ void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , dou
 	
 	int i , j ; 
 	
-	fprintf( stderr , "Calculating kmers for SAG\n" ) ; // TODO only report when verbose is activated 
+	if( verbose > 0 ) 
+		fprintf( stderr , "Calculating kmers for SAG\n" ) ;  
 	// Calculate kmer matrix for the SAG 
 	int *sagKmers_int = NULL ; // = (int*) malloc( cols * sagN * sizeof(int) ) ; 
 	posixCounter( sag , sagN , threads , chopSize , overlap , &sagKmers_int , &tmp , NULL ) ; 
@@ -37,7 +38,8 @@ void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , dou
 	double *sagKmers = (double*) malloc( cols * sagN * sizeof(double) ) ; 
 	intToDoubleMat( sagKmers_int , &sagN , &cols , sagKmers ) ; 
 	
-	fprintf( stderr , "Calculating kmers for Metagenome\n" ) ;
+	if( verbose > 0 )
+		fprintf( stderr , "Calculating kmers for Metagenome\n" ) ;
 	// Calculate kmer matrix for the gm 
 	int *gmKmers_int = NULL ; // (int*) malloc( cols * gmN * sizeof(int) ) ; 
 	posixCounter( gm , gmN , threads , chopSize , overlap , &gmKmers_int , &tmp , &names ) ;  
@@ -111,7 +113,8 @@ void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , dou
 		printf( "\n" ) ; 
 	}*/
 	
-	fprintf( stderr , "Calculating correlation matrix\n" ) ;
+	if( verbose > 0 ) 
+		fprintf( stderr , "Calculating correlation matrix\n" ) ;
 	// calculate correlation matrix 
 	double *corr = (double*) malloc( cols * cols * sizeof(double) ) ; 
 	corrMat ( standardK , &rows , &cols , corr ) ; 
@@ -126,7 +129,8 @@ void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , dou
 	}
 	*/
 	
-	fprintf( stderr , "Calculating eigen vectors\n" ) ; 
+	if( verbose > 0 ) 
+		fprintf( stderr , "Calculating eigen vectors\n" ) ; 
 	// Calculate eigen space 
 	double *eigVecs = (double*) malloc( cols * subDim * sizeof(double) ) ; 
 	double *eigVals = (double*) malloc( subDim * sizeof(double) ) ; 	
@@ -147,7 +151,8 @@ void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , dou
 		printf( "\n" ) ; 
 	}*/
 	
-	fprintf( stderr , "Projecting into principle component subspace\n" ) ;
+	if( verbose > 0 ) 
+		fprintf( stderr , "Projecting into principle component subspace\n" ) ;
 	// Project into first three principal components 
 	double *projection = (double*) malloc( rows * subDim * sizeof(double) ) ; 
 	matProd ( standardK , eigVecs , &rows , &cols , &subDim , projection ) ; 
@@ -173,7 +178,8 @@ void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , dou
 	}
 	*/
 	
-	fprintf( stderr , "Training classifier\n" ) ; 
+	if( verbose > 0 ) 
+		fprintf( stderr , "Training classifier\n" ) ; 
 	// Train the classifier on the SAG 
 	double *mu = (double*) malloc( subDim * k * sizeof(double) ) ; 
 	double *cov = (double*) malloc( subDim * subDim * k * sizeof(double) ) ; 
@@ -189,7 +195,8 @@ void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , dou
 		fitMixture ( tSAG , &sagN , &subDim , &k , &eps , p , mu , cov , &maxIter , &threads ) ; 
 	}
 	
-	fprintf( stderr , "Designing cut-off\n" ) ;
+	if( verbose > 0 )
+		fprintf( stderr , "Designing cut-off\n" ) ;
 	// Calc cut-off w.r.t. ref. dist. 
 	double cut ; 
 	if( k < 2 ) 
@@ -201,15 +208,16 @@ void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , dou
 	}
 	else
 	{   
-int i , j ; fprintf( stderr , "p: " ) ; for( i = 0 ; i < k ; i++ ) { fprintf( stderr , " %e" , p[i] ) ; } fprintf( stderr , "\n" ) ; 
-fprintf( stderr , "mu:\n" ) ; for( i = 0 ; i < subDim ; i++ ){ for( j = 0 ; j < k ; j++ ) fprintf( stderr , "%e " , mu[ i + subDim * j ] ) ; fprintf( stderr , "\n" ) ; } 
-int ll; for( ll = 0 ; ll < k ; ll++ ){ fprintf( stderr , "Cov %i:\n" , ll ) ; for( i = 0 ; i < subDim ; i++ ){ for( j = 0 ; j < subDim ; j++ ) fprintf( stderr , "%e " , cov[ i + subDim * j + subDim * subDim * ll ] ) ; fprintf( stderr , "\n" ) ; } }
+// int i , j ; fprintf( stderr , "p: " ) ; for( i = 0 ; i < k ; i++ ) { fprintf( stderr , " %e" , p[i] ) ; } fprintf( stderr , "\n" ) ; 
+// fprintf( stderr , "mu:\n" ) ; for( i = 0 ; i < subDim ; i++ ){ for( j = 0 ; j < k ; j++ ) fprintf( stderr , "%e " , mu[ i + subDim * j ] ) ; fprintf( stderr , "\n" ) ; } 
+// int ll; for( ll = 0 ; ll < k ; ll++ ){ fprintf( stderr , "Cov %i:\n" , ll ) ; for( i = 0 ; i < subDim ; i++ ){ for( j = 0 ; j < subDim ; j++ ) fprintf( stderr , "%e " , cov[ i + subDim * j + subDim * subDim * ll ] ) ; fprintf( stderr , "\n" ) ; } }
 		double quantile = 1.0 - alpha ; 
 		getGMMQuantile ( &quantile , p , mu , cov , &maxIter , &subDim , &k , &eps , &threads , &cut ) ; 
 	}
-fprintf( stderr , "Cut: %e\n" , cut ) ; 
+// fprintf( stderr , "Cut: %e\n" , cut ) ; 
 	
-	fprintf( stderr , "Calculating square root matrix\n" ) ;
+	if( verbose > 0 )
+		fprintf( stderr , "Calculating square root matrix\n" ) ;
 	// Calculate square root matrix of covariance 
 	double *sqRtMat = (double*) malloc( subDim * subDim * sizeof(double) ) ; 
 	double *covEigVecs = (double*) malloc( subDim * subDim * sizeof(double) ) ; 
@@ -228,7 +236,8 @@ fprintf( stderr , "Cut: %e\n" , cut ) ;
 	}
 	matProd ( covEigVecs , diagMat , &subDim , &subDim , &subDim , sqRtMat ) ; 
 	
-	fprintf( stderr , "Calculating distance statistics\n" ) ;
+	if( verbose > 0 )
+		fprintf( stderr , "Calculating distance statistics\n" ) ;
 	// Calculate distance statistics 
 	double *diffMat = NULL ; 
 	double *statMat = NULL ; 
@@ -282,7 +291,8 @@ fprintf( stderr , "Cut: %e\n" , cut ) ;
 		}
 	}
 	
-	fprintf( stderr , "Classifying\n" ) ;
+	if( verbose > 0 )
+		fprintf( stderr , "Classifying\n" ) ;
 	// Count proportion of chops in the SAG and compare to beta before storing in out 
 	int max = 0 ; 
 	for( i = 0 ; i < gmN ; i++ ) 

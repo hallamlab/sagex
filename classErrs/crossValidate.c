@@ -3,11 +3,13 @@
 #include <stdio.h>
 #include <string.h>
 
-void crossValidate ( int *kk , int *pp , int *aa ) 
+void crossValidate ( int *kk , int *pp , int *aa , double *AA , double *BB ) 
 {
 	int k = *kk ; 
 	int p = *pp ; 
 	int a = *aa ; 
+	double A = *AA ; 
+	double B = *BB ; 
 	printf( "Simulating sequencing...\n" ) ; 
 	system( "./sequence ./../../../mg1655eColi.fasta 4000 1000 1> tmp1 2> tmp2" ) ; // tmp1 : test , tmp2 : train 
 	printf( "catting... \n" ) ; 
@@ -24,14 +26,22 @@ void crossValidate ( int *kk , int *pp , int *aa )
 	char ks[100] ; 
 	char ps[100] ; 
 	char as[100] ; 
+	char As[100] ; 
+	char Bs[100] ; 
 	sprintf( ks , "%i" , k ) ; 
 	sprintf( ps , "%i" , p ) ; 
 	sprintf( as , "%i" , a ) ; 
+	sprintf( As , "%f" , A ) ; 
+	sprintf( Bs , "%f" , B ) ; 
 	strcat( cmd , ks ) ; 
 	strcat( cmd , " -p " ) ; 
 	strcat( cmd , ps ) ; 
 	strcat( cmd , " -a " ) ; 
 	strcat( cmd , as ) ; 
+	strcat( cmd , " -A " ) ; 
+	strcat( cmd , As ) ; 
+	strcat( cmd , " -B " ) ; 
+	strcat( cmd , Bs ) ; 
 	strcat( cmd , " > tmp5" ) ; 
 printf( "DEBUG, k: %i, p: %i, a: %i\n" , k , p , a ) ; 
 printf( "DEBUG: %s\n" , cmd ) ; 
