@@ -4,8 +4,10 @@
 // Classifies contigs as IN a SAG 
 // sag : list of standard-length sag sequences 
 // sagN : length of the sag array 
+// sagNames : a pointer to the list of sag contig names 
 // names : integer titles equating only when a metagenomic sequence is from the same contig 
 // gm : list of standard-length metagenome / metbag sequences 
+// gmNames : a pointer to the list of metagenome contig names 
 // alpha : type 1 error rate for classifying an element of gm as IN the SAG 
 // beta : proportion of shared names that need to be IN the SAG 
 // threads : the desired number of posix threads for this task 
@@ -18,13 +20,14 @@
 // verbose : describe process in stderr if > 0 
 // kmerFlag : returns kmers to stdout if > 0 
 // out : a pointer to be allocated with the int-names of contigs which have been classified as IN the SAG 
-void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , double beta , int threads , double eps , int minIter , int maxIter , int chopSize , int overlap , int k , int verbose , int kmerFlag , int **out ) 
+void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minIter , int maxIter , int chopSize , int overlap , int k , int verbose , int kmerFlag , int **out ) 
 {
 	int subDim = 3 ; 
 	int cols = 256 ; 
 	int rows = gmN + sagN ; 
 	int tmp ; 
-	int *names = NULL ; 
+	int *names = NULL ; // never freed ??  
+	int *sagNamesIdx = NULL ; 
 	double eigenEps = 0.00000000001 ;  
 	
 	int i , j ; 
@@ -33,7 +36,7 @@ void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , dou
 		fprintf( stderr , "Calculating kmers for SAG\n" ) ;  
 	// Calculate kmer matrix for the SAG 
 	int *sagKmers_int = NULL ; // = (int*) malloc( cols * sagN * sizeof(int) ) ; 
-	posixCounter( sag , sagN , threads , chopSize , overlap , &sagKmers_int , &tmp , NULL ) ; 
+	posixCounter( sag , sagN , threads , chopSize , overlap , &sagKmers_int , &tmp , &sagNamesIdx ) ; 
 	sagN = tmp ; 
 	double *sagKmers = (double*) malloc( cols * sagN * sizeof(double) ) ; 
 	intToDoubleMat( sagKmers_int , &sagN , &cols , sagKmers ) ; 
@@ -74,16 +77,16 @@ void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , dou
 	
 	if( kmerFlag > 0 ) // report kmers and quit 
 	{
-		for( i = 0 ; i < gmN ; i++ ) 
+		for( i = 0 ; i < gmN ; i++ ) // TODO if there are gmN contigs, shouldn't there be more kmers?  
 		{
-			printf( "gm.%i" , i ) ; 
+			printf( "%s" , gmNames[ names[i] ] ) ; 
 			for( j = 0 ; j < cols ; j++ ) 
 				printf( "\t%e" , bigK[ i + (gmN + sagN) * j ] ) ; 
 			printf( "\n" ) ; 
 		}
 		for( i = 0 ; i < sagN ; i++ ) 
 		{
-			printf( "sag.%i" , i ) ; 
+			printf( "%s" , sagNames[ sagNamesIdx[i] ] ) ; 
 			for( j = 0 ; j < cols ; j++ ) 
 				printf( "\t%e" , bigK[ gmN + i + (gmN + sagN) * j ] ) ; 
 			printf( "\n" ) ; 
@@ -303,19 +306,21 @@ void classify ( char **sag , int sagN , char **gm , int gmN , double alpha , dou
 	
 	int *categoryTotal = NULL ; 
 	int *categoryCount = NULL ; 
-	if( out == NULL ) // only report kmers 
+	if( out == NULL ) // only report kmer PCA  
 	{
 		for( i = 0 ; i < subDim ; i++ ) 
 			printf( "PC_%i\t" , i ) ; 
 		printf( "status\n" ) ; 
 		for( i = 0 ; i < gmN ; i++ ) // cycle through genome entries 
 		{
+			printf( "%s\t" , gmNames[ names[i] ] ) ;  
 			for( j = 0 ; j < subDim ; j++ ) 
 				printf( "%e\t" , gmC[ i + gmN * j ] ) ; 
 			printf( "%i\n" , status[i] ) ; 
 		}
 		for( i = 0 ; i < sagN ; i++ ) 
 		{
+			printf( "%s\t" , sagNames[ sagNamesIdx[i] ] ) ; 
 			for( j = 0 ; j < subDim ; j++ ) 
 				printf( "%e\t" , sagC[ i + sagN * j ] ) ; 
 			printf( "2\n" ) ; 

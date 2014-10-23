@@ -223,12 +223,12 @@ printf( "DEBUG chopping SAG...\n" ) ;
 		hitPtr = NULL ; 
 	else
 		hitPtr = &hits ; 
-        classify ( SAG.sequence , SAG.N_contigs , metBag.sequence , metBag.N_contigs , Alpha , Beta , threads , eps , itMin , itMax , chopSize , overlap , k , verbose , kmerFlag , hitPtr );
+        classify ( SAG.sequence , SAG.N_contigs , SAG.header , metBag.sequence , metBag.N_contigs , metBag.header , Alpha , Beta , threads , eps , itMin , itMax , chopSize , overlap , k , verbose , kmerFlag , hitPtr );
 	
-	if( kmerPCA > 0 || kmerFlag > 0 ) 
+	if( kmerPCA > 0 || kmerFlag > 0 )  
 		return 0 ; 
 	
-	for( int i = 0 ; i < metBag.N_contigs ; i++ ) 
+	for( int i = 0 ; i < metBag.N_contigs ; i++ ) // TODO move this into classify  
 	{
 		if( hits[i] > 0 ) 
 		{
