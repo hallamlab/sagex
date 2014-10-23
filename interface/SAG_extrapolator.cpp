@@ -36,7 +36,7 @@ int checkArgs(int hflag, int argc) {
 -B: \n\
 \tThe proportion of contig chops required before deciding the contig is in the SAG. [DEFAULT = 0.8]\n\
 -E: \n\
-\tConvergance parameter for Eigen value calculation. [DEFAULT = 0.0001]\n\
+\tConvergance parameter for Eigen value calculation. [DEFAULT = 0.0000001]\n\
 -m: \n\
 \tThe minimum number of iterations for Eigen value calculation. [DEFAULT = 10]\n\
 -M: \n\
@@ -91,7 +91,7 @@ int main( int argc, char *argv[] ) {
     int overlap = 500;
     double Alpha = 0.05;
     double Beta = 0.8;
-    double eps = 0.0001;
+    double eps = 0.0000001;
     int itMin = 10;
     int itMax = 100000;
     int threads = 1;

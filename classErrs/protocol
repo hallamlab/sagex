@@ -8,34 +8,3 @@ Ecoli cross-validation:
 4. Run blastn to produce a blast table for use in alignment filtering.
 5. Run the pipeline using the training data as the SAG & the cat'd file as the metagenome.
 6. Count classification errors in R using seqinr 
-
-Example code, obviously requires a debug:
-shamas:classErrs wdurno$ g++ ./sequence.cpp -o sequence
-shamas:classErrs wdurno$ ls
-sequence	sequence.cpp
-shamas:classErrs wdurno$ vim protocol
-shamas:classErrs wdurno$ ./sequence ./../../../mg1655eColi.fasta 
-Simulates sequencing from a single chromosome FASTA. Outputs to stdout
-Randomly assigns material to (1) stdout and (2) stderr
-Please provide (1) a fasta file , (2) the sequence size, and (3) the number of samples
-shamas:classErrs wdurno$ ./sequence ./../../../mg1655eColi.fasta 4000 1000 1> train 2> test
-shamas:classErrs wdurno$ vim protocol 
-shamas:classErrs wdurno$ cp ./../../../metaG.fasta ./meta.fasta
-shamas:classErrs wdurno$ cat meta.fasta test > test.fasta
-shamas:classErrs wdurno$ makeblastdb -in test.fasta -dbtype nucl
-
-
-Building a new DB, current time: 10/21/2014 11:48:07
-New DB name:   test.fasta
-New DB title:  test.fasta
-Sequence type: Nucleotide
-Keep Linkouts: T
-Keep MBits: T
-Maximum file size: 1073741824B
-Adding sequences from FASTA; added 659928 sequences in 36.6104 seconds.
-shamas:classErrs wdurno$ blastn -query ./train -db ./test.fasta -outfmt 6 > bltbl
-shamas:classErrs wdurno$ ../sagex -i ./train -G meta.fasta -b bltbl -t 50 > out
-sagex(42812) malloc: *** error for object 0x1001000e8: incorrect checksum for freed object - object was probably modified after being freed.
-*** set a breakpoint in malloc_error_break to debug
-Abort trap
-
