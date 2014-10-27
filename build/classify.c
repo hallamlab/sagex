@@ -37,7 +37,7 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	// Calculate kmer matrix for the SAG 
 	int *sagKmers_int = NULL ; // = (int*) malloc( cols * sagN * sizeof(int) ) ; 
 	posixCounter( sag , sagN , threads , chopSize , overlap , &sagKmers_int , &tmp , &sagNamesIdx ) ; 
-	sagN = tmp ; 
+	sagN = tmp ; // NOTICE CHANGE OF sagN 
 	double *sagKmers = (double*) malloc( cols * sagN * sizeof(double) ) ; 
 	intToDoubleMat( sagKmers_int , &sagN , &cols , sagKmers ) ; 
 	
@@ -46,7 +46,7 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	// Calculate kmer matrix for the gm 
 	int *gmKmers_int = NULL ; // (int*) malloc( cols * gmN * sizeof(int) ) ; 
 	posixCounter( gm , gmN , threads , chopSize , overlap , &gmKmers_int , &tmp , &names ) ;  
-	gmN = tmp ; 
+	gmN = tmp ; // NOTICE CHANGE OF  gmN  
 	double *gmKmers = (double*) malloc( cols * gmN * sizeof(double) ) ; 
 	
 	rows = gmN + sagN ;  
@@ -77,7 +77,7 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	
 	if( kmerFlag > 0 ) // report kmers and quit 
 	{
-		for( i = 0 ; i < gmN ; i++ ) // TODO if there are gmN contigs, shouldn't there be more kmers?  
+		for( i = 0 ; i < gmN ; i++ )   
 		{
 			printf( "%s" , gmNames[ names[i] ] ) ; 
 			for( j = 0 ; j < cols ; j++ ) 
@@ -103,18 +103,32 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 		printf( "\n" ) ; 
 	}*/
 	
+	// convert to proportions, if requested 
+	if( chopSize <= 0 ) 
+	{
+		double sum ; 
+		for( i = 0 ; i < rows ; i++ ) 
+		{
+			sum = 0.0 ; 
+			for( j = 0 ; j < cols ; j++ ) 
+				sum += bigK[ i + rows * j ] ; 
+			for( j = 0 ; j < cols ; j++ ) 
+				bigK[ i + rows * j ] = bigK[ i + rows * j ] / sum ; 
+		}
+	}
+	
 	// standardizes dimensions 
 	double *standardK = (double*) malloc( cols * rows * sizeof(double) ) ; 
 	colStandardize( bigK , &rows , &cols , standardK ) ; 
 	
 	/*
-	int k , l ; 
+	{int k , l ; 
 	for( k = 0 ; k < rows ; k++ ) 
 	{
 		for( l = 0 ; l < cols ; l++ ) 
-			printf( "%f " , standardK[ k + rows * l ] ) ; 
-		printf( "\n" ) ; 
-	}*/
+			fprintf( stderr , "%f " , standardK[ k + rows * l ] ) ; 
+		fprintf( stderr , "\n" ) ; 
+	}}*/
 	
 	if( verbose > 0 ) 
 		fprintf( stderr , "Calculating correlation matrix\n" ) ;

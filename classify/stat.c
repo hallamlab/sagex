@@ -1,6 +1,7 @@
 
 //#include "classify.h"
-#include <stdlib.h>
+#include <stdlib.h> 
+#include <stdio.h>
 #include <math.h>
 
 // Standardizes the columns of a matrix 
@@ -35,7 +36,7 @@ void corrMat ( double *mat , int *n , int *dims , double *out )
 	{
 		m[i] = 0.0 ; 
 		for( j = 0 ; j < *n ; j++ ) 
-			m[i] += mat[ j + *dims * i ] ; 
+			m[i] += mat[ j + *n * i ] ;   
 		m[i] = m[i] / ((double) *n ) ; 
 	}
 	for( i = 0 ; i < *dims ; i++ ) // calc vars 

@@ -30,6 +30,8 @@ int checkArgs(int hflag, int argc) {
 \tThe desired length (in base-pairs) of the chopped contig. [DEFAULT = 2000]\n\
 -x: \n\
 \tThe number of base-pairs overlapping between each of the chopped contigs. [DEFAULT = 500]\n\
+-P: \n\
+\tDo not chop contigs. Run kmer proportions. Supersedes -c & -x.\n\
 \n\t\tClassification and Extrapolation-specific options:\n\
 -A: \n\
 \tThe false positive rate for attributing contig chops to SAGs. [DEFAULT = 0.05]\n\
@@ -100,7 +102,7 @@ int main( int argc, char *argv[] ) {
     int verbose = 0 ; 
     int c;
     opterr = 0;
-    while ((c = getopt (argc, argv, "i:G:b:o:p:a:c:x:A:B:E:m:M:t:k:hXYv")) != -1) {
+    while ((c = getopt (argc, argv, "i:G:b:o:p:a:c:x:A:B:E:m:M:t:k:hXYPv")) != -1) {
         switch (c) {
             case 'i':
                 input = optarg;
@@ -124,8 +126,11 @@ int main( int argc, char *argv[] ) {
                 chopSize = atoi(optarg);
                 break;
             case 'x':
-                overlap = atoi(optarg);
-                break;
+		overlap = atoi(optarg);
+		break;
+            case 'P':
+                chopSize = -1 ;
+                break; 
             case 'A':
                 Alpha = atof(optarg);
                 break;
@@ -225,10 +230,10 @@ printf( "DEBUG chopping SAG...\n" ) ;
 		hitPtr = &hits ; 
         classify ( SAG.sequence , SAG.N_contigs , SAG.header , metBag.sequence , metBag.N_contigs , metBag.header , Alpha , Beta , threads , eps , itMin , itMax , chopSize , overlap , k , verbose , kmerFlag , hitPtr );
 	
-	if( kmerPCA > 0 || kmerFlag > 0 ) 
+	if( kmerPCA > 0 || kmerFlag > 0 )  
 		return 0 ; 
 	
-	for( int i = 0 ; i < metBag.N_contigs ; i++ ) 
+	for( int i = 0 ; i < metBag.N_contigs ; i++ ) // TODO move this into classify  
 	{
 		if( hits[i] > 0 ) 
 		{

@@ -31,11 +31,17 @@ void *pCount ( void *targ ) // temp arg
 	
 	// count the total number of chops and therefore the number of columns to allocate 
 	int n = 0 ; 
-	for( i = arg->start ; i < arg->end ; i++ ) 
+	if( arg->chopSize > 0 ) // number of kmer vectors will be greater than the number of contigs  
 	{
-		tmp = countChops( arg->fasta[i] , arg->chopSize , arg->overlap ) ; 
-		n += tmp ; 
+		for( i = arg->start ; i < arg->end ; i++ ) 
+		{
+			tmp = countChops( arg->fasta[i] , arg->chopSize , arg->overlap ) ; 
+			n += tmp ; 
+		}
 	}
+	else // one kmer vector per contig  
+		n = arg->end - arg->start ; 
+	
 	*(arg->cols) = n ; 
 	
 	// allocate the space 
@@ -51,26 +57,40 @@ void *pCount ( void *targ ) // temp arg
 	int j = arg->start ; // sequence number 
 	int k = 0 ; // chop number in current sequence 
 	tmp = strlen( arg->fasta[ j ] ) ; 
-	while( i < n )  
-	{
-		if( k * m + arg->chopSize > tmp ) // switch to next sequence 
+	if( arg->chopSize > 0 ) // chop up contigs  
+	{ 
+		while( i < n )  
 		{
-			j = j + 1 ; 
-			k = 0 ; 
-			tmp = strlen( arg->fasta[ j ] ) ; 
+			if( k * m + arg->chopSize > tmp ) // switch to next sequence 
+			{
+				j = j + 1 ; 
+				k = 0 ; 
+				tmp = strlen( arg->fasta[ j ] ) ; 
+			}
+			
+			tetraCounterChop( &(arg->fasta[j][k*m]) , &( (*(arg->out))[ 256 * i ] ) , arg->chopSize ) ; 
+			
+			// name the chop, if requested 
+			if( arg->names != NULL ) 
+				(*arg->names)[i] = j ; 
+			
+			// iterate chop number within current sequence 
+			k++ ; 
+			
+			// iterate overal chop number 
+			i++ ; 
 		}
-		
-		tetraCounterChop( &(arg->fasta[j][k*m]) , &( (*(arg->out))[ 256 * i ] ) , arg->chopSize ) ; 
-		
-		// name the chop, if requested 
-		if( arg->names != NULL ) 
-			(*arg->names)[i] = j ; 
-		
-		// iterate chop number within current sequence 
-		k++ ; 
-		
-		// iterate overal chop number 
-		i++ ; 
+	}
+	else // do not chop up contigs 
+	{ 
+		for( i = arg->start ; i < arg->end ; i++ ) // one kmer vector per contig  
+		{
+			tetraCounterChop( arg->fasta[i] , &( (*(arg->out))[ 256 * i ] ) , strlen( arg->fasta[i] ) ) ; 
+			
+			// name the contig, if requested 
+			if( arg->names != NULL ) 
+				(*arg->names)[i] = i ; 
+		}
 	}
 	pthread_exit(NULL) ; 
 }
@@ -102,7 +122,7 @@ void posixCounter( char **fasta , int n , int threads , int chopSize , int overl
 		pargs[i].end = (i+1) * n / threads ; 
 		if( i + 1 == threads ) 
 			pargs[i].end = n ; 
-		pargs[i].chopSize = chopSize ; // TODO set -1 as flag for proportional kmers  
+		pargs[i].chopSize = chopSize ;  
 		pargs[i].overlap = overlap ; 
 		pargs[i].out = &mats[i] ; 
 		pargs[i].cols = &cols[i] ; 
@@ -123,7 +143,7 @@ void posixCounter( char **fasta , int n , int threads , int chopSize , int overl
 		err = pthread_create( &thr[i] , NULL , pCount , (void*) &pargs[i] ) ; 
 		if( err ) 
 		{
-			printf( "ERROR, POSIX: %i\n" , err ) ; 
+			fprintf( stderr , "ERROR, POSIX: %i\n" , err ) ; 
 			return ; 
 		}
 	}
@@ -135,7 +155,7 @@ void posixCounter( char **fasta , int n , int threads , int chopSize , int overl
 		err = pthread_join( thr[i] , &status ) ; 
 		if( err ) 
 		{
-			printf( "ERRPR, POSIX: %i\n" , err ) ; 
+			fprintf( stderr , "ERRPR, POSIX: %i\n" , err ) ; 
 			return ; 
 		}
 	}
