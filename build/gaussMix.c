@@ -294,6 +294,7 @@ void fitMixture( double *x , int *n , int *d , int *k , double *eps , double *p 
 {
 	double pi = atan(1.0) * 4.0 ; 
 	
+fprintf( stderr , "DEBUG: initializing\n" ) ; 
 	// initialize parameters 
 	int zeros = 1 ; 
 	int i , j ;  
@@ -312,6 +313,7 @@ void fitMixture( double *x , int *n , int *d , int *k , double *eps , double *p 
 		fprintf( stderr , "ERROR: kmeans failure\n" ) ; 
 		return ; 
 	}
+fprintf( stderr , "DEBUG: first lik\n" ) ;
 	
 	// calculate first value for log likelihood 
 	double prevLik , lik ; 
@@ -324,12 +326,14 @@ void fitMixture( double *x , int *n , int *d , int *k , double *eps , double *p 
 	double *tmpMu = (double*) malloc( *d * *k * sizeof(double) ) ; 
 	double *tmpSig = (double*) malloc( *d * *d * *k * sizeof(double) ) ; 
 	
+fprintf( stderr , "DEBUG: main loop\n" ) ;
 	double err = *eps + 1.0 ; 
 	int contin = 1 ; 
 	int iter = 0 ;  
 // fprintf( stderr , "running main loop\n" ) ; 
 	while( (err > *eps && contin > 0) && iter < *maxIter && contin > 0 ) 
 	{
+fprintf( stderr , "DEBUG: err: %e, eps: %e, iter: %i\n" , err , *eps , iter ) ;
 		iter += 1 ; 
 		
 		pGivenX ( x , n , d , k , p , mu , sig , &pi , pMat , eps , threads ) ; 

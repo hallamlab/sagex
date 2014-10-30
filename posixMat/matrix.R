@@ -8,6 +8,98 @@ cc = cov(c)
 g = matrix( rnorm(100) , nrow=20 , ncol = 5 ) 
 gg = cov(g) 
 
+householder = function(x,k) 
+{
+	n = dim(x)[1] 
+	out = c( rep(0,k) , x[(k+1):n,k] ) 
+	ttl = sqrt( sum( out * out ) ) 
+	out[k+1] = out[k+1] + sign(out[k+1]) * ttl 
+	ttl = sqrt( sum( out * out ) ) 
+	out = out / ttl 
+	u = out 
+	v = as.vector( 2 * x %*% u - 2 * u * ( t(u) %*% x %*% u ) )  
+	out = list() 
+	out$u = u 
+	out$v = v 
+	return( out ) 
+} 
+
+givens = function(x,y) 
+{
+	r = sqrt( x*x + y*y ) 
+	c = x/r 
+	s = -y/r 
+	out = list() 
+	out$c = c 
+	out$s = s 
+	return( out )  
+}
+
+psdEig = function( x , eps=0.01 ) 
+{
+	n = dim(x)[1]  
+	y = x 
+	Q = diag( rep(1,n) ) 
+	# convert to tridiag 
+	for( i in 1:(n-1) ) 
+	{
+		hh = householder(y,i) 
+		Q = Q %*% ( diag(1,n) - 2.0 * hh$u %*% t(hh$u) ) 
+		y = y - hh$u %*% t(hh$v) - hh$v %*% t(hh$u) 
+	}
+	
+	
+	for( m in n:2 ) 
+	{
+		err = eps + 1 
+		iter = 0 
+		while( err > eps ) 
+		{
+			iter = iter + 1 
+			# Wilkinson shift 
+			d = ( y[m-1,m-1] - y[m,m] ) / 2 
+			s = NULL 
+			if( d == 0 ) { s = y[m,m] - abs(y[m-1,m]) } else { s = y[m,m] - (y[m-1,m]^2) / ( d + sign(d) * sqrt( d*d + (y[m-1,m]^2) ) ) } 
+			xx = y[1,1] - s 
+			yy = y[1,2] 
+			for( k in 1:(m-1) ) 
+			{
+				c = NULL 
+				s = NULL 
+				if( m > 2 ) 
+				{
+					g = givens(xx,yy) 
+					c = g$c 
+					s = g$s 
+				}
+				else
+				{
+					t = 0.5 * atan( 2 * y[1,2] / (y[2,2] - y[1,1]) ) 
+					c = cos(t) 
+					s = sin(t) 
+				} 
+				w = c*xx - s*yy 
+				d = y[k,k] - y[k+1,k+1] 
+				z = s * ( 2 * c * y[k,k+1] + d * s ) 
+				y[k,k] = y[k,k] - z 
+				y[k+1,k+1] = y[k+1,k+1] + z 
+				y[k,k+1] = d * c * s + (c*c - s*s) * y[k,k+1] 
+				y[k+1,k] = y[k,k+1] 
+				xx = y[k,k+1] 
+				if( k > 1 ) { y[k-1,k] = w ; y[k,k-1] = w } 
+				if( k < m - 1 ){ yy = -s * y[k+1,k+2] ; y[k+1,k+2] = c * y[k+1,k+2] ; y[k+2,k+1] = y[k+1,k+2] } 
+				Q[,k:(k+1)] = Q[,k:(k+1)] %*% cbind( c(c,-s) , c(s,c) ) 
+				err = abs(y[m-1,m]) / ( abs( y[m-1,m-1] ) + abs( y[m,m] ) ) 
+			}
+		}
+	}
+	
+	out = list() 
+	out$v = diag(y)  
+	out$q = Q 
+	return( out )  
+} 
+
 library(MASS)
 bigMat = function( n )
 {
