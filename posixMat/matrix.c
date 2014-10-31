@@ -905,11 +905,195 @@ double hypot( double x , double y )
 	return x * sqrt( 1.0 + t * t ) ; 
 }
 
-void givens( double x , double y , double *c , double *s ) 
+void givens( double *x , double *y , double *c , double *s ) 
 {
-	double r = hypot( x , y ) ; 
-	*c = x / r ; 
-	*s = - y / r ; 
+	double r = hypot( *x , *y ) ; 
+	*c = *x / r ; 
+	*s = - *y / r ; 
+}
+
+// provides rotation vectors for a Householder rotation 
+// x : a col-major order PSD matrix with rows rows 
+// col : the column to rotate 
+// u , v : output vectors of lenth rows 
+void householder ( double *x , int *rows , int *col , double *u , double *v ) 
+{
+	int i , j ; 
+	double ttl = 0.0 ; 
+	for( i = 0 ; i < *col + 1 ; i++ ) 
+		u[i] = 0.0 ; 
+	for( i = *col + 1 ; i < *rows ; i++ ) 
+	{
+		u[i] = x[ i + *rows * *col ] ; 
+		ttl += x[ i + *rows * *col ] * x[ i + *rows * *col ] ; 
+	}
+	ttl = sqrt(ttl) ; 
+	u[ *col + 1 ] += copysign( ttl , u[ *col + 1 ] ) ; 
+	ttl = 0.0 ; 
+	for( i = *col + 1 ; i < *rows ; i++ ) 
+		ttl += u[i] * u[i] ; 
+	ttl = sqrt(ttl) ; 
+	for( i = 0 ; i < *rows ; i++ ) 
+		u[i] = u[i] / ttl ; // u complete  
+	if( v == NULL ) 
+		return ; 
+	// calculate v , for PSD x only , v = 2 * x %*% u - 2 * u * ( t(u) %*% x %*% u )  
+	ttl = 0.0 ; // this will hold a quadratic form 
+	for( i = *col + 1 ; i < *rows ; i++ ) // calculate avoiding multiplying zeros 
+	{
+		for( j = *col + 1 ; j < *rows ; j++ ) 
+			ttl += x[ i + *rows * j ] * u[i] * u[j] ; 
+	}
+	for( i = 0 ; i < *rows ; i++ ) 
+		v[i] = -2.0 * u[i] * ttl ; 
+	for( i = 0 ; i < *rows ; i ++ ) 
+	{
+		ttl = 0.0 ; 
+		for( j = *col + 1 ; j < *rows ; j++ ) 
+			ttl += x[ i + *rows * j ] * u[j] ; 
+		ttl *= 2.0 ; 
+		v[i] += ttl ; 
+	} 
+}
+
+// Eigen calculator for PSD matrices 
+// x : column-major order n X n PSD matrix 
+// eps : convergence term 
+// q : space for n X n doubles for eigenvectors, if null the algorithm will be sped up but no eigenvectors will be returned 
+// vals : space for n doubles for eigenvalues 
+void psdEig ( double *x , int *n , double *eps , double *q , double *vals ) 
+{
+	double *y = (double*) malloc( *n * *n * sizeof(double) ) ; 
+	memcpy( y , x , *n * *n * sizeof(double) ) ; 
+	double *qq = NULL ; 
+	int i , j , k , l ; 
+	if( q != NULL ) 
+	{
+		qq = (double*) malloc( *n * *n * sizeof(double) ) ; 
+		for( i = 0 ; i < *n ; i++ ) 
+		{
+			for( j = 0 ; j < *n ; j++ ) 
+			{
+				if( i == j ) 
+					q[ i + *n * j ] = 1.0 ; 
+				else
+					q[ i + *n * j ] = 0.0 ; 
+			}
+		}
+	}
+	
+	// householder rotations 
+	double *u = (double*) malloc( *n * sizeof(double) ) ; 
+	double *v = (double*) malloc( *n * sizeof(double) ) ; 
+	for( i = 0 ; i < *n - 1 ; i++ ) 
+	{
+		householder ( y , n , &i , u , v ) ; 
+		for( j = i+1 ; j < *n ; j++ ) 
+		{
+			for( k = 0 ; k < *n ; k++ ) 
+				y[ j + *n * k ] -= u[j] * v[k] ; 
+		} 
+		for( j = 0 ; j < *n ; j++ ) 
+		{
+			for( k = i+1 ; k < *n ; k++ ) 
+				y[ j + *n * k ] -= v[j] * u[k] ; 
+		}
+		if( q != NULL ) 
+		{
+			for( j = 0 ; j < *n ; j++ ) 
+			{
+				for( k = i+1 ; k < *n ; k++ ) 
+				{ 
+					qq[ j + *n * k ] = 0.0 ; 
+					for( l = i+1 ; l < *n ; l++ ) 
+						qq[ j + *n * k ] += q[ j + *n * l ] * u[l] * u[k] ; 
+					qq[ j + *n * k ] *= 2.0 ; 
+				}
+			}
+			for( j = 0 ; j < *n ; j++ ) 
+			{
+				for( k = i+1 ; k < *n ; k++ ) 
+					q[ j + *n * k ] -= qq[ j + *n * k ] ; 
+			}
+		}
+	}
+	
+	// symmetric tri-diagonal qr algorithm with implicit Wilkinson shifts 
+	double err , d , s , c , w , z , xx , yy , t ; 
+	for( i = *n ; i > 1 ; i-- ) 
+	{
+		err = 1.0 + *eps ; 
+		while( err > *eps ) 
+		{
+			d = ( y[i-2 + *n * (i-2)] - y[i-1 + *n * (i-1)] ) / 2.0 ; 
+			if( d == 0.0 ) 
+				s = y[i-1 + *n * (i-1)] - fabs( y[ i-2 + *n * (i-1) ] ) ; 
+			else
+				s = y[i-1 + *n * (i-1)] - y[ i-2 + *n * (i-1) ] * y[ i-2 + *n * (i-1) ] / ( d + copysign( sqrt( d*d + y[ i-2 + *n * (i-1) ] * y[ i-2 + *n * (i-1) ] ) , d ) ) ; 
+			xx = y[0] - s ; 
+			yy = y[ *n ] ; 
+			for( j = 0 ; j < i-1 ; j++ ) 
+			{
+				if( i > 1 ) 
+					givens ( &xx , &yy , &c , &s ) ; 
+				else 
+				{
+					t = 0.5 * atan( 2.0 * y[*n] / ( y[ 1 + *n ] - y[0] ) ) ; 
+					c = cos(t) ; 
+					s = sin(t) ; 
+				}
+				w = c * xx - s * yy ; 
+				d = y[ j + *n * j ] - y[ j+1 + *n * (j+1) ] ; 
+				z = s * ( 2.0 * c * y[ j + *n * (j+1) ] + d * s ) ; 
+				y[ j + *n * j ] = y[ j + *n * j ] - z ; 
+				y[ j+1 + *n * (j+1) ] = y[ j+1 + *n * (j+1) ] + z ; 
+				y[ j + *n * (j+1) ] = d * c * s + (c*c - s*s) * y[ j + *n * (j+1) ] ; 
+				y[ j+1 + *n * j ] = y[ j + *n * (j+1) ] ; 
+				xx = y[ j + *n * (j+1) ] ; 
+				if( j > 0 ) 
+				{
+					y[ j-1 + *n * j ] = w ; 
+					y[ j + *n * (j-1) ] = w ; 
+				}
+				if( j < i-1 ) 
+				{
+					yy = -s * y[ j+1 + *n * (j+2) ] ; 
+					y[ j+1 + *n * (j+2) ] = c * y[ j+1 + *n * (j+2) ] ; 
+					y[ j+2 + *n * (j+1) ] = y[ j+1 + *n * (j+2) ] ; 
+				} 
+				
+				// update vectors 
+				if( q != NULL ) 
+				{
+					for( k = 0 ; k < *n ; k++ ) 
+					{
+						qq[ k ] = c * q[ k + *n * j ] - s * q[ k + *n * (j+1) ] ; 
+						qq[ k + *n ] = s * q[ k + *n * j ] + c * q[ k + *n * (j+1) ] ;  
+					}
+					for( k = 0 ; k < *n ; k++ ) 
+					{
+						q[ k + *n * j ] = qq[ k ] ; 
+						q[ k + *n * (j+1) ] = qq[ k + *n ] ; 
+					}
+				}
+				
+				// calculate convergence errors 
+				// err = abs( y[ i-2 + *n * (i-1) ] ) / ( abs( y[ i-2 + *n * (i-2) ] ) + abs( y[ i-1 + *n * (i-1) ] ) ) ; 
+			}
+			// calculate convergence errors 
+			err = fabs( y[ i-2 + *n * (i-1) ] ) / ( fabs( y[ i-2 + *n * (i-2) ] ) + fabs( y[ i-1 + *n * (i-1) ] ) ) ; 
+		}
+	}
+	
+	// eigenvalues are stored on diagonal 
+	for( i = 0 ; i < *n ; i++ ) 
+		vals[i] = y[ i + *n * i ] ; 
+	
+	free( u ) ; 
+	free( v ) ; 
+	free( y ) ; 
+	if( q != NULL ) 
+		free( qq ) ; 
 }
 
 /*
