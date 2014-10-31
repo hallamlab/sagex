@@ -54,7 +54,9 @@ void simulateGMM ( int *n , int *d , int *k , double *p , double *mu , double *s
 	}
 	for( i = 0 ; i < *k ; i++ ) // calc sqrt-mats 
 	{
-		powerIteration ( &sig[ *d * *d * i ] , d , d , eps , eigVals , eigVecs , threads ) ; 
+		// powerIteration ( &sig[ *d * *d * i ] , d , d , eps , eigVals , eigVecs , threads ) ; 
+		double eps2 = *eps * 0.0001 ; 
+		psdEig ( &sig[ *d * *d * i ] , d , &eps2 , eigVecs , eigVals ) ; // TODO remove threads arg if not used 
 		for( j = 0 ; j < *d ; j++ ) 
 			diagMat[ j + *d * j ] = sqrt(eigVals[j]) ; 
 		matProdP ( eigVecs , diagMat , d , d , d , &sqrtSig[ *d * *d * i ] , threads ) ; 

@@ -1,1 +1,4 @@
 classErrs/tmp*
+build/*
+sagex
+tmp/*

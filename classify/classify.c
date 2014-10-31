@@ -28,7 +28,7 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	int tmp ; 
 	int *names = NULL ; // never freed ??  
 	int *sagNamesIdx = NULL ; 
-	double eigenEps = 0.00000000001 ;  
+	double eigenEps = eps * 0.0001 ;  
 	
 	int i , j ; 
 	
@@ -154,7 +154,8 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	// Calculate eigen space 
 	double *eigVecs = (double*) malloc( cols * subDim * sizeof(double) ) ; 
 	double *eigVals = (double*) malloc( subDim * sizeof(double) ) ; 	
-	powerIteration ( corr , &cols , &subDim , &eigenEps , eigVals , eigVecs , &threads ) ;  
+	// powerIteration ( corr , &cols , &subDim , &eigenEps , eigVals , eigVecs , &threads ) ;  
+	psdEig ( corr , &subDim , &eigenEps , eigVecs , eigVals ) ; 
 	
 	/*
 	printf( "Eigen values: " ) ; 

@@ -134,3 +134,10 @@ void powerIteration( double *mat , int *n , int *m , double *eps , double *val ,
 // out : enough space for an n X n matrix 
 void chol ( double *in , int *n , double *out ) ; 
 
+// Eigen calculator for PSD matrices 
+// x : column-major order n X n PSD matrix 
+// eps : convergence term 
+// q : space for n X n doubles for eigenvectors, if null the algorithm will be sped up but no eigenvectors will be returned 
+// vals : space for n doubles for eigenvalues 
+void psdEig ( double *x , int *n , double *eps , double *q , double *vals ) ; 
+

@@ -578,7 +578,9 @@ void invPsd( double *in , int *n , double *out , double *eps , int *threads )
 	double *vec = (double*) malloc( *n * *n * sizeof(double) ) ; 
 	double *diag = (double*) malloc( *n * *n * sizeof(double) ) ; 
 	double *tmp = (double*) malloc( *n * *n * sizeof(double) ) ; 
-	powerIteration( in , n , n , eps , val , vec , threads ) ; 
+	// powerIteration( in , n , n , eps , val , vec , threads ) ; 
+	double eps2 = *eps * 0.0001 ; 
+	psdEig ( in , n , &eps2 , vec , val ) ; 
 	
 	int i , j ; 
 	for( i = 0 ; i < *n ; i++ ) 

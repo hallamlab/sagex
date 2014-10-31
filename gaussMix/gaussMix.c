@@ -145,7 +145,9 @@ void init ( double *x , int *n , int *d , int *k , double *p , double *eps , int
 	
 	double *eigVals = (double*) malloc( *d * sizeof(double) ) ; 
 	double *eigVecs = (double*) malloc( *d * *d * sizeof(double) ) ; 
-	powerIteration( sig0 , d , d , eps , eigVals , eigVecs , threads ) ; 
+	// powerIteration( sig0 , d , d , eps , eigVals , eigVecs , threads ) ; 
+	double eps2 = *eps * 0.0001 ; 
+	psdEig ( sig0 , d , &eps2 , eigVecs , eigVals ) ; // TODO remove threads arg if no longer used 
 	double *tmpMat1 = (double*) malloc( *d * *d * sizeof(double) ) ; 
 	int i , j ; 
 	for( i = 0 ; i < *d ; i++ ) 
