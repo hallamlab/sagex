@@ -6,25 +6,22 @@
 #include "matrix.h"
 #include "gammaDist.h"
 
-int checkArgs(int hflag, int argc) {
-    string usage = "USAGE: \t ./extrapolate_SAG [options] -i sag.fasta -G metagenome.fasta -b table.blastout\n\n\
--h\t\tShow help message and exit\n\
--o\t\tThe output Directory [OPTIONAL]\n"; /*Needs editing*/
-    if (hflag == 1) {
-        string help = "\nHelp description:\n\
+int checkArgs(int hFlag, int errFlag, char *input, char *Gm, char *blastout, int argc) {
+    string usage = "\nUSAGE: \t ./sagex [options] -i sag.fasta -G metagenome.fasta";
+    string help = "\nHelp description:\n\
 -i: \n \
 \tThe SAG assembly. This must be in FASTA format \n\
+-o \n\
+\tThe output file. If not specified, output sequences in FASTA format are printed to stdout [OPTIONAL]\n\
 -G: \n \
 \tThe Metagenome assembly to be used for genome extrapolation. This must be in FASTA format \n\
 -b: \n \
-\tThe BLAST alignment file of the SAG to the Metagenome. This must be in output format 6 \n\
+\tThe BLAST alignment file of the SAG to the Metagenome. This must be in output format 6 [OPTIONAL]\n\
 \n\t\tBLAST-specific options:\n\
 -p: \n \
 \tThe minimum percentage of identical sequence between the SAG and metagenomic contigs for the contig to be included in the analysis. Integer type. [DEFAULT = 85]\n\
 -a: \n \
 \tAn integer representing the minimum number of base-pairs of the SAG aligned to the metagenome to be considered a good hit. [DEFAULT = 2000]\n\
--k: \n \
-\tDesired number of Gaussians in the mixture model. [DEFAULT = 1]\n\
 \n\t\tContig uniformity options:\n\
 -c: \n\
 \tThe desired length (in base-pairs) of the chopped contig. [DEFAULT = 2000]\n\
@@ -33,6 +30,8 @@ int checkArgs(int hflag, int argc) {
 -P: \n\
 \tDo not chop contigs. Run kmer proportions. Supersedes -c & -x.\n\
 \n\t\tClassification and Extrapolation-specific options:\n\
+-k: \n \
+\tDesired number of Gaussians in the mixture model. [DEFAULT = 1]\n\
 -A: \n\
 \tThe false positive rate for attributing contig chops to SAGs. [DEFAULT = 0.05]\n\
 -B: \n\
@@ -45,20 +44,32 @@ int checkArgs(int hflag, int argc) {
 \tThe maximum number of iterations for Eigen value calculation. [DEFAULT = 1000]\n\
 \n\t\tOther options:\n\
 -X: \n\
-\tReport kmer PCA in an R-readable format instead of a fasta.\n\
+\tA file to write the kmer PCA in an R-readable format.\n\
 -Y: \n\
-\tReport kmers in an R-readable format instead of a fasta. Supersedes -X.\n\
+\tA file to report the kmer frequencies in an R-readable format.\n\
 -v: \n\
 \tTurns on verbosity.\n\
 -t \n\
-\tThe maximum number of POSIX threads allowed. [DEFAULT = 1]\n";
+\tThe maximum number of POSIX threads allowed. [DEFAULT = 1]\n\
+-h \n\
+\tShow help message and exit\n";
+    if (hFlag == 1) {
         cerr << usage << endl << help << endl;
         exit(1);
      }
-    else if (argc < 4) {
-        fprintf(stderr, "Required arguments have not been included\n\n");
-        cerr << usage << endl;
-        exit(0);
+    else if (errFlag > 0){
+        string ME_error = "Mutually exclusive arguments were included in the command-line options.";
+        cerr << ME_error << endl << help << endl;
+        exit(2);
+    }
+    else if ((!input) || (!Gm)) {
+        cerr << "Required arguments";
+        if (input == NULL)
+            cerr << " -i ";
+        if (Gm == NULL)
+            cerr << " -G ";
+        cerr << "have not been included!" << endl << usage << endl;
+        exit(3);
     }
 }   
 
@@ -85,10 +96,11 @@ int main( int argc, char *argv[] ) {
     char *Gm = NULL;
     char *blastout = NULL;
     char *output = NULL; 
+    char *kmerPCA = NULL; 
+    char *kmerFreq = NULL; 
     int k = 1; 
     int pID = 85;
     int minAL = 2000;
-    int hflag = 0;
     int chopSize = 2000;
     int overlap = 500;
     double Alpha = 0.05;
@@ -97,12 +109,9 @@ int main( int argc, char *argv[] ) {
     int itMin = 10;
     int itMax = 100000;
     int threads = 1;
-    int kmerPCA = 0 ; 
-    int kmerFlag = 0 ; 
-    int verbose = 0 ; 
-    int c;
-    opterr = 0;
-    while ((c = getopt (argc, argv, "i:G:b:o:p:a:c:x:A:B:E:m:M:t:k:hXYPv")) != -1) {
+    int c, errFlag, verbose, proportionFlag, hFlag;
+    errFlag = verbose = proportionFlag = hFlag = opterr = 0;
+    while ((c = getopt (argc, argv, "i:G:b:o:p:a:c:x:A:B:E:m:M:t:k:X:Y:hPv")) != -1) {
         switch (c) {
             case 'i':
                 input = optarg;
@@ -123,13 +132,26 @@ int main( int argc, char *argv[] ) {
                 output = optarg;
                 break;
             case 'c':
-                chopSize = atoi(optarg);
+                if (proportionFlag = 1) {
+                    proportionFlag = -1;
+                    errFlag++;
+                }
+                else
+                    chopSize = atoi(optarg);
                 break;
             case 'x':
-		overlap = atoi(optarg);
-		break;
+                if (proportionFlag = 1) {
+                    proportionFlag = -1;
+                    errFlag++;
+                }
+                else
+		            overlap = atoi(optarg);
+		        break;
             case 'P':
-                chopSize = -1 ;
+                if (proportionFlag != 0)
+                    errFlag++;
+                else
+                    proportionFlag++;
                 break; 
             case 'A':
                 Alpha = atof(optarg);
@@ -153,16 +175,16 @@ int main( int argc, char *argv[] ) {
                 k = atoi(optarg);
                 break;
             case 'X':
-                kmerPCA = 1;
+                kmerPCA = optarg;
                 break;
             case 'Y':
-                kmerFlag = 1 ; 
+                kmerFreq = optarg; 
                 break ; 
             case 'v':
                 verbose = 1;
                 break;
             case 'h':
-                hflag = 1;
+                hFlag = 1;
                 break;
             case '?':
                 if ((optopt == 'i') || (optopt == 'G') || (optopt == 'o') || (optopt == 'c') || (optopt == 'x') || (optopt == 'A') || (optopt == 'B') || (optopt == 't')) {
@@ -179,7 +201,7 @@ int main( int argc, char *argv[] ) {
         }
     }
     
-    checkArgs(hflag, argc);
+    checkArgs(hFlag, errFlag, input, Gm, blastout, argc);
 	
     FastaParser Metagenome(Gm); 
     Metagenome.parse_fasta(); 
@@ -205,10 +227,10 @@ int main( int argc, char *argv[] ) {
     else {
         // metBag.get_Gm_scaffolds(NULL, NULL, NULL, 0, Metagenome.header, Metagenome.sequence, Metagenome.N_contigs, pID, minAL);
         metBag.header = Metagenome.header ; 
-	metBag.sequence = Metagenome.sequence ; 
-	metBag.N_contigs = Metagenome.N_contigs ; 
-	metBag.genome_length = Metagenome.genome_length ; 
-	// cout << "Passed get_Gm_scaffolds" << endl;
+	    metBag.sequence = Metagenome.sequence ; 
+	    metBag.N_contigs = Metagenome.N_contigs ; 
+	    metBag.genome_length = Metagenome.genome_length ; 
+	    // cout << "Passed get_Gm_scaffolds" << endl;
     }
 	/*
 printf( "DEBUG chopping Gm...\n" ) ; 
@@ -224,15 +246,15 @@ printf( "DEBUG chopping SAG...\n" ) ;
 	
         int *hits = NULL; 
 	int **hitPtr ; 
-	if( kmerPCA > 0 ) 
+	if( kmerPCA != NULL ) 
 		hitPtr = NULL ; 
 	else
-		hitPtr = &hits ; 
-        classify ( SAG.sequence , SAG.N_contigs , SAG.header , metBag.sequence , metBag.N_contigs , metBag.header , Alpha , Beta , threads , eps , itMin , itMax , chopSize , overlap , k , verbose , kmerFlag , hitPtr );
-	
-	if( kmerPCA > 0 || kmerFlag > 0 )  
-		return 0 ; 
-	
+		hitPtr = &hits ;
+    classify ( SAG.sequence , SAG.N_contigs , SAG.header , metBag.sequence , metBag.N_contigs , metBag.header , Alpha , Beta , threads , eps , itMin , itMax , chopSize , overlap , proportionFlag , k , verbose , kmerFreq , hitPtr );
+
+	if( (kmerPCA != NULL) || (kmerFreq != NULL) )
+		return 0 ;
+
 	for( int i = 0 ; i < metBag.N_contigs ; i++ ) // TODO move this into classify  
 	{
 		if( hits[i] > 0 ) 

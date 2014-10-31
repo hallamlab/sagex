@@ -18,9 +18,9 @@
 // overlap : 
 // k : number of gaussians in the gaussian mixture model modelling the SAG 
 // verbose : describe process in stderr if > 0 
-// kmerFlag : returns kmers to stdout if > 0 
+// kmerFreq : writes kmers to file specified 
 // out : a pointer to be allocated with the int-names of contigs which have been classified as IN the SAG 
-void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minIter , int maxIter , int chopSize , int overlap , int k , int verbose , int kmerFlag , int **out ) 
+void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minIter , int maxIter , int chopSize , int overlap , int proportion, int k , int verbose , char *kmerFreq , int **out ) 
 {
 	int subDim = 3 ; 
 	int cols = 256 ; 
@@ -75,22 +75,25 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	double *bigK = (double*) malloc( cols * rows * sizeof(double) ) ; 
 	appendRows ( gmKmers , sagKmers , &gmN , &sagN , &cols , bigK ) ; 
 	
-	if( kmerFlag > 0 ) // report kmers and quit 
+	if( kmerFreq != NULL ) // report kmers and quit 
 	{
+        FILE *kmerFile;
+        kmerFile = fopen(kmerFreq, "w");
 		for( i = 0 ; i < gmN ; i++ )   
 		{
-			printf( "%s" , gmNames[ names[i] ] ) ; 
+			fprintf(kmerFile, "%s" , gmNames[ names[i] ] ) ; 
 			for( j = 0 ; j < cols ; j++ ) 
-				printf( "\t%e" , bigK[ i + (gmN + sagN) * j ] ) ; 
-			printf( "\n" ) ; 
+				fprintf(kmerFile, "\t%e" , bigK[ i + (gmN + sagN) * j ] ) ; 
+			fprintf(kmerFile, "\n" ) ; 
 		}
 		for( i = 0 ; i < sagN ; i++ ) 
 		{
-			printf( "%s" , sagNames[ sagNamesIdx[i] ] ) ; 
+			fprintf(kmerFile, "%s" , sagNames[ sagNamesIdx[i] ] ) ; 
 			for( j = 0 ; j < cols ; j++ ) 
-				printf( "\t%e" , bigK[ gmN + i + (gmN + sagN) * j ] ) ; 
-			printf( "\n" ) ; 
+				fprintf(kmerFile, "\t%e" , bigK[ gmN + i + (gmN + sagN) * j ] ) ; 
+			fprintf(kmerFile, "\n" ) ; 
 		}
+        fclose(kmerFile);
 		return ; 
 	}
 	
@@ -104,7 +107,7 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	}*/
 	
 	// convert to proportions, if requested 
-	if( chopSize <= 0 ) 
+	if( proportion = 1 ) 
 	{
 		double sum ; 
 		for( i = 0 ; i < rows ; i++ ) 
