@@ -24,6 +24,18 @@ householder = function(x,k)
 	return( out ) 
 } 
 
+matHouseholder = function(x,k) 
+{
+	n = dim(x)[1] 
+	tmp = .C( "householder" , as.double(x) , as.integer(n) , as.integer(k) , as.double(1:n) , as.double(1:n) ) 
+	u = tmp[[4]] 
+	v = tmp[[5]] 
+	out = list() 
+	out$u = u 
+	out$v = v 
+	return( out )  
+}
+
 givens = function(x,y) 
 {
 	r = sqrt( x*x + y*y ) 
@@ -35,7 +47,28 @@ givens = function(x,y)
 	return( out )  
 }
 
-psdEig = function( x , eps=0.01 ) 
+matGivens = function(x,y) 
+{
+	tmp = .C( "givens" , as.double(x) , as.double(y) , as.double(1.0) , as.double(1.0) ) ; 
+	out = list() 
+	out$c = tmp[[3]] 
+	out$s = tmp[[4]] 
+	return( out )  
+}
+
+matPsdEig = function( x , eps=0.0000000000000001 ) 
+{
+	n = dim(x)[1] 
+	q = matrix( 1:(n*n) , nrow=n , ncol=n ) 
+	v = 1:n
+	tmp = .C( "psdEig" , as.double(x) , as.integer(n) , as.double(eps) , as.double(q) , as.double(v) ) 
+	out = list() 
+	out$q = matrix( tmp[[4]] , nrow=n , ncol=n )
+	out$v = tmp[[5]] 
+	return( out ) 
+}
+
+psdEig = function( x , eps=0.00000000000000001 )  
 {
 	n = dim(x)[1]  
 	y = x 
@@ -47,7 +80,6 @@ psdEig = function( x , eps=0.01 )
 		Q = Q %*% ( diag(1,n) - 2.0 * hh$u %*% t(hh$u) ) 
 		y = y - hh$u %*% t(hh$v) - hh$v %*% t(hh$u) 
 	}
-	
 	
 	for( m in n:2 ) 
 	{
@@ -89,8 +121,9 @@ psdEig = function( x , eps=0.01 )
 				if( k > 1 ) { y[k-1,k] = w ; y[k,k-1] = w } 
 				if( k < m - 1 ){ yy = -s * y[k+1,k+2] ; y[k+1,k+2] = c * y[k+1,k+2] ; y[k+2,k+1] = y[k+1,k+2] } 
 				Q[,k:(k+1)] = Q[,k:(k+1)] %*% cbind( c(c,-s) , c(s,c) ) 
-				err = abs(y[m-1,m]) / ( abs( y[m-1,m-1] ) + abs( y[m,m] ) ) 
+				# err = abs(y[m-1,m]) / ( abs( y[m-1,m-1] ) + abs( y[m,m] ) ) 
 			}
+			err = abs(y[m-1,m]) / ( abs( y[m-1,m-1] ) + abs( y[m,m] ) ) 
 		}
 	}
 	
