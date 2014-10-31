@@ -20,7 +20,7 @@
 // verbose : describe process in stderr if > 0 
 // kmerFreq : writes kmers to file specified 
 // out : a pointer to be allocated with the int-names of contigs which have been classified as IN the SAG 
-void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minIter , int maxIter , int chopSize , int overlap , int proportion, int k , int verbose , char *kmerFreq , int **out ) 
+void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minIter , int maxIter , int chopSize , int overlap , int proportion, int k , int verbose , char *kmerFreq , char *kmerPCA, int **out ) 
 {
 	int subDim = 3 ; 
 	int cols = 256 ; 
@@ -324,25 +324,29 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	
 	int *categoryTotal = NULL ; 
 	int *categoryCount = NULL ; 
-	if( out == NULL ) // only report kmer PCA  
+	if( kmerPCA != NULL ) // only report kmer PCA  
 	{
+        FILE *pcaFile;
+        pcaFile = fopen(kmerPCA, "w");
 		for( i = 0 ; i < subDim ; i++ ) 
-			printf( "PC_%i\t" , i ) ; 
-		printf( "status\n" ) ; 
+			fprintf(pcaFile, "PC_%i\t" , i ) ; 
+		fprintf(pcaFile, "status\n" ) ; 
 		for( i = 0 ; i < gmN ; i++ ) // cycle through genome entries 
 		{
-			printf( "%s\t" , gmNames[ names[i] ] ) ;  
+			fprintf(pcaFile, "%s\t" , gmNames[ names[i] ] ) ;  
 			for( j = 0 ; j < subDim ; j++ ) 
-				printf( "%e\t" , gmC[ i + gmN * j ] ) ; 
-			printf( "%i\n" , status[i] ) ; 
+				fprintf(pcaFile, "%e\t" , gmC[ i + gmN * j ] ) ; 
+			fprintf(pcaFile, "%i\n" , status[i] ) ; 
 		}
 		for( i = 0 ; i < sagN ; i++ ) 
 		{
-			printf( "%s\t" , sagNames[ sagNamesIdx[i] ] ) ; 
+			fprintf(pcaFile, "%s\t" , sagNames[ sagNamesIdx[i] ] ) ; 
 			for( j = 0 ; j < subDim ; j++ ) 
-				printf( "%e\t" , sagC[ i + sagN * j ] ) ; 
-			printf( "2\n" ) ; 
+				fprintf(pcaFile, "%e\t" , sagC[ i + sagN * j ] ) ; 
+			fprintf(pcaFile, "2\n" ) ; 
 		}
+        fclose(pcaFile);
+        return ;
 	}
 	else // report hits as fasta  
 	{

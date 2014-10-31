@@ -243,14 +243,14 @@ printf( "DEBUG chopping SAG...\n" ) ;
 	
         int *metBag_headerMap = map_chops(chopped_metBag.header, chopped_metBag.N_contigs);
     	*/
-	
-        int *hits = NULL; 
+    int *hits = NULL; 
 	int **hitPtr ; 
 	if( kmerPCA != NULL ) 
 		hitPtr = NULL ; 
 	else
 		hitPtr = &hits ;
-    classify ( SAG.sequence , SAG.N_contigs , SAG.header , metBag.sequence , metBag.N_contigs , metBag.header , Alpha , Beta , threads , eps , itMin , itMax , chopSize , overlap , proportionFlag , k , verbose , kmerFreq , hitPtr );
+
+    classify ( SAG.sequence , SAG.N_contigs , SAG.header , metBag.sequence , metBag.N_contigs , metBag.header , Alpha , Beta , threads , eps , itMin , itMax , chopSize , overlap , proportionFlag , k , verbose , kmerFreq , kmerPCA , hitPtr );
 
 	if( (kmerPCA != NULL) || (kmerFreq != NULL) )
 		return 0 ;
