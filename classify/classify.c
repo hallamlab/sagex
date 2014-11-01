@@ -20,7 +20,7 @@
 // verbose : describe process in stderr if > 0 
 // kmerFreq : writes kmers to file specified 
 // out : a pointer to be allocated with the int-names of contigs which have been classified as IN the SAG 
-void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minIter , int maxIter , int chopSize , int overlap , int proportion, int k , int verbose , char *kmerFreq , char *kmerPCA, int **out ) 
+void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minIter , int maxIter , int chopSize , int overlap , int proportion, int k , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output ) 
 {
 	int subDim = 3 ; 
 	int cols = 256 ; 
@@ -94,7 +94,6 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 			fprintf(kmerFile, "\n" ) ; 
 		}
         fclose(kmerFile);
-		return ; 
 	}
 	
 	/*
@@ -346,29 +345,52 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 			fprintf(pcaFile, "2\n" ) ; 
 		}
         fclose(pcaFile);
-        return ;
 	}
-	else // report hits as fasta  
+// report hits as fasta  
+//		*out = (int*) malloc( max * sizeof(int) ) ; 
+	categoryTotal = (int*) malloc( max * sizeof(int) ) ; 
+	categoryCount = (int*) malloc( max * sizeof(int) ) ; 
+	for( i = 0 ; i < max ; i++ )
 	{
-		*out = (int*) malloc( max * sizeof(int) ) ; 
-		categoryTotal = (int*) malloc( max * sizeof(int) ) ; 
-		categoryCount = (int*) malloc( max * sizeof(int) ) ; 
-		for( i = 0 ; i < max ; i++ )
-		{
-			categoryTotal[i] = 0 ; 
-			categoryCount[i] = 0 ; 
-		}
-		for( i = 0 ; i < gmN ; i++ ) 
-		{
-			categoryTotal[ names[i] ] ++ ; 
-			if( status[i] > 0 ) 
-				categoryCount[ names[i] ] ++ ; 
-		}
-		for( i = 0 ; i < max ; i++ ) 
-		{
+		categoryTotal[i] = 0 ; 
+		categoryCount[i] = 0 ; 
+	}
+	for( i = 0 ; i < gmN ; i++ ) 
+	{
+		categoryTotal[ names[i] ] ++ ; 
+		if( status[i] > 0 ) 
+			categoryCount[ names[i] ] ++ ; 
+	}
+    if (output != NULL)
+    {
+        FILE *sagexOut;
+        sagexOut = fopen(output, "w+");
+	    for( i = 0 ; i < max ; i++ ) 
+	    {
+            if( ((double) categoryCount[i] ) / ((double) categoryTotal[i] ) >= beta )// allow for 100% 
+            {
+                fprintf(sagexOut, "%s\n", gmNames[i]);
+                fprintf(sagexOut, "%s\n", gm[i]);
+            }
+        }
+        fclose(sagexOut);
+    }
+    else
+    {
+	    for( i = 0 ; i < max ; i++ )
+	    {
+            if( ((double) categoryCount[i] ) / ((double) categoryTotal[i] ) >= beta )// allow for 100% 
+            {
+                fprintf(stdout, "%s\n", gmNames[i]);
+                fprintf(stdout, "%s\n", gm[i]);
+            }
+        }
+    }
+                
+/*
 			if( categoryTotal[i] == 0 ) 
 			{
-				(*out)[i] = 0 ; // if not found, it is definately not in the SAG 
+				(*out)[i] = 0 ; // if not found, it is definitely not in the SAG 
 			}
 			else
 			{
@@ -376,9 +398,8 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 					(*out)[i] = 1 ; // in the SAG 
 				else
 					(*out)[i] = 0 ; // not in the SAG 
-			}
-		}
-	}
+            }
+*/
 
 	// free unused memory  
 	free( sagKmers_int ) ; 
@@ -413,8 +434,5 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	if( statMat != NULL ) 
 		free( statMat ) ; 
 }
-
-
-
 
 

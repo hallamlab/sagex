@@ -98,7 +98,7 @@ int main( int argc, char *argv[] ) {
     char *output = NULL; 
     char *kmerPCA = NULL; 
     char *kmerFreq = NULL; 
-    int k = 1; 
+    int k = 1;
     int pID = 85;
     int minAL = 2000;
     int chopSize = 2000;
@@ -250,18 +250,7 @@ printf( "DEBUG chopping SAG...\n" ) ;
 	else
 		hitPtr = &hits ;
 
-    classify ( SAG.sequence , SAG.N_contigs , SAG.header , metBag.sequence , metBag.N_contigs , metBag.header , Alpha , Beta , threads , eps , itMin , itMax , chopSize , overlap , proportionFlag , k , verbose , kmerFreq , kmerPCA , hitPtr );
-
-	if( (kmerPCA != NULL) || (kmerFreq != NULL) )
-		return 0 ;
-
-	for( int i = 0 ; i < metBag.N_contigs ; i++ ) // TODO move this into classify  
-	{
-		if( hits[i] > 0 ) 
-		{
-			cout << metBag.header[i] << endl ; 
-			cout << metBag.sequence[i] << endl ; 
-		}
-	} 
+    classify ( SAG.sequence , SAG.N_contigs , SAG.header , metBag.sequence , metBag.N_contigs , metBag.header , Alpha , Beta , threads , eps , itMin , itMax , chopSize , overlap , proportionFlag , k , verbose , kmerFreq , kmerPCA , hitPtr , output);
+	 
 	return 0 ; 
 }
