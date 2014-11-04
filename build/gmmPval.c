@@ -103,6 +103,7 @@ void simulateGMM ( int *n , int *d , int *k , double *p , double *mu , double *s
 	free( pp ) ; 
 }
 
+/*
 void quickSort ( double *x , int *n ) 
 {
 	if( *n <= 1 ) 
@@ -143,6 +144,7 @@ void quickSort ( double *x , int *n )
 	i = *n - pivot - 1 ; 
 	quickSort( &x[pivot+1] , &i ) ; 
 }
+*/
 
 // parametric bootstrap calculating quantiles of minimum distance from the means 
 // q : quantile value desired 
@@ -183,7 +185,7 @@ void getGMMQuantile ( double *q , double *p , double *mu , double *sig , int *n 
 	}
 	
 	// sort 
-	quickSort( stats , n ) ; 
+	quickSort( stats , n , NULL ) ; 
 	
 	// get quantile 
 	int m = floor( ((double) *q) * ((double) *n) ) ; 

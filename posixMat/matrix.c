@@ -1,6 +1,74 @@
 
 #include "matrix.h"
 
+void quickSort ( double *x , int *n , int *idx ) 
+{
+        if( *n <= 1 ) 
+                return ; 
+        double tmp ; 
+	int tmpIdx ; 
+        if( *n == 2 ) 
+        {   
+                if( x[0] > x[1] ) 
+                {   
+                        tmp = x[1] ; 
+                        x[1] = x[0] ; 
+                        x[0] = tmp ; 
+			
+			if( idx != NULL ) 
+			{
+				tmpIdx = idx[1] ; 
+				idx[1] = idx[0] ; 
+				idx[0] = tmpIdx ; 
+			}
+                }   
+                return ; 
+        }   
+    
+        int pivot = *n - 1 ;   
+    
+        int i ; 
+        int j = 0 ; 
+        for( i = 0 ; i < *n-1 ; i++ ) 
+        {   
+                if( x[i] < x[pivot] ) 
+                {   
+                        tmp = x[i] ; 
+                        x[i] = x[j] ; 
+                        x[j] = tmp ; 
+			
+			if( idx != NULL ) 
+			{
+				tmpIdx = idx[i] ; 
+				idx[i] = idx[j] ; 
+				idx[j] = tmpIdx ; 
+			}
+			
+			j++ ; 
+                }   
+        }   
+        tmp = x[pivot] ; 
+        x[pivot] = x[j] ; 
+        x[j] = tmp ; 
+	
+	if( idx != NULL ) 
+	{
+		tmpIdx = idx[pivot] ; 
+		idx[pivot] = idx[j] ; 
+		idx[j] = tmpIdx ; 
+	}
+	
+	pivot = j ; 
+    
+        i = pivot  ;   
+        quickSort( x , &i , idx ) ; 
+        i = *n - pivot - 1 ; 
+	if( idx != NULL ) 
+        	quickSort( &x[pivot+1] , &i , &idx[pivot+1] ) ; 
+	else 
+		quickSort( &x[pivot+1] , &i , NULL ) ; 
+}
+
 // transpose a matrix 
 // x : the matrix, also the output space 
 // m : number of rows 
@@ -967,6 +1035,7 @@ void psdEig ( double *x , int *n , double *eps , double *q , double *vals )
 {
 	double *y = (double*) malloc( *n * *n * sizeof(double) ) ; 
 	memcpy( y , x , *n * *n * sizeof(double) ) ; 
+	int *idx = (int*) malloc( *n * sizeof(int) ) ; 
 	double *qq = NULL ; 
 	int i , j , k , l ; 
 	if( q != NULL ) 
@@ -1089,11 +1158,33 @@ void psdEig ( double *x , int *n , double *eps , double *q , double *vals )
 	
 	// eigenvalues are stored on diagonal 
 	for( i = 0 ; i < *n ; i++ ) 
+	{
+		idx[i] = i ; 
 		vals[i] = y[ i + *n * i ] ; 
+		y[i] = y[ i + *n * i ] ; 
+		if( q != NULL ) 
+		{
+			for( j = 0 ; j < *n ; j++ ) 
+				qq[ i + *n * j ] = q[ i + *n * j ] ; 
+		}
+	}
+	
+	// sort eigenvalues, TODO implement as pivoting  
+	quickSort( vals , n , idx ) ; 
+	for( i = 0 ; i < *n ; i++ ) 
+	{
+		vals[*n - i - 1] = y[ idx[i] ] ; 
+		if( q != NULL ) 
+		{
+			for( j = 0 ; j < *n ; j++ ) 
+				q[ j + *n * (*n - i - 1) ] = qq[ j + *n * idx[i] ] ; 
+		}
+	}
 	
 	free( u ) ; 
 	free( v ) ; 
 	free( y ) ; 
+	free( idx ) ; 
 	if( q != NULL ) 
 		free( qq ) ; 
 }

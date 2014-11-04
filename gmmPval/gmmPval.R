@@ -44,10 +44,10 @@ matMuller = function( n , m )
 	return( out ) 
 }
 
-quickSort = function( x ) 
-{
-	n = length(x) 
-	out = .C( "quickSort" , as.double(x) , as.integer(n) )[[1]]  
-	return( out ) 
-}
+#quickSort = function( x ) 
+#{
+#	n = length(x) 
+#	out = .C( "quickSort" , as.double(x) , as.integer(n) )[[1]]  
+#	return( out ) 
+#}
 

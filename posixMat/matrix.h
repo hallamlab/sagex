@@ -14,6 +14,12 @@
 // out : enough space for (rows1 + rows2) * cols doubles 
 void appendRows ( double *top , double *bot , int *rows1 , int *rows2 , int *cols , double *out ) ;  
 
+// quickSort 
+// x : sorts n-length vector x 
+// idx : if non-null, a list of indices that will be sorted with x 
+// x serves as an output  
+void quickSort ( double *x , int *n , int *idx ) ; 
+
 // transpose a matrix 
 // x : the matrix, also the output space 
 // m : number of rows 

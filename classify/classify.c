@@ -151,10 +151,10 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	if( verbose > 0 ) 
 		fprintf( stderr , "Calculating eigen vectors\n" ) ; 
 	// Calculate eigen space 
-	double *eigVecs = (double*) malloc( cols * subDim * sizeof(double) ) ; 
-	double *eigVals = (double*) malloc( subDim * sizeof(double) ) ; 	
+	double *eigVecs = (double*) malloc( cols * cols * sizeof(double) ) ; 
+	double *eigVals = (double*) malloc( cols * sizeof(double) ) ; 	
 	// powerIteration ( corr , &cols , &subDim , &eigenEps , eigVals , eigVecs , &threads ) ;  
-	psdEig ( corr , &subDim , &eigenEps , eigVecs , eigVals ) ; 
+	psdEig ( corr , &cols , &eigenEps , eigVecs , eigVals ) ; 
 	
 	/*
 	printf( "Eigen values: " ) ; 

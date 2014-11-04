@@ -36,6 +36,16 @@ matHouseholder = function(x,k)
 	return( out )  
 }
 
+quickSort = function( x ) 
+{
+        n = length(x) 
+        tmp = .C( "quickSort" , as.double(x) , as.integer(n) , as.integer(1:n) ) 
+        out = list() 
+	out$x = tmp[[1]] 
+	out$idx = tmp[[3]] 
+	return( out ) 
+}
+
 givens = function(x,y) 
 {
 	r = sqrt( x*x + y*y ) 
@@ -128,8 +138,10 @@ psdEig = function( x , eps=0.00000000000000001 )
 	}
 	
 	out = list() 
-	out$v = diag(y)  
-	out$q = Q 
+	out$v = diag(y) 
+	idx = sort( out$v , index.return=T , decreasing=T )$ix 
+	out$v = out$v[ idx ] 
+	out$q = Q[ , idx ] 
 	return( out )  
 } 
 
