@@ -4,7 +4,6 @@
 // counts occurrence of a substring in a super string 
 int count ( char *sub , char *sup , int n )
 {
-        // printf( "DEBUG: comparing %s and %s\n" , sub , sup ) ; 
         if( strlen( sub ) == 0 )
                 return -1 ;
         if( strlen( sup ) == 0 )

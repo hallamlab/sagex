@@ -12,7 +12,7 @@
 // beta : proportion of shared names that need to be IN the SAG 
 // threads : the desired number of posix threads for this task 
 // eps : PCA convergence error parameter 
-// minIter : PCA minimum number of iterations 
+// minLength : minimum length for contigs  
 // maxIter : PCA maximum number of iterations , max iterations in gamma dist integration or max bootstraps in qGMM integration  
 // chopsSize : 
 // overlap : 
@@ -20,7 +20,7 @@
 // verbose : describe process in stderr if > 0 
 // kmerFreq : writes kmers to file specified 
 // out : a pointer to be allocated with the int-names of contigs which have been classified as IN the SAG 
-void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minIter , int maxIter , int chopSize , int overlap , int proportion, int k , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output ) 
+void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minLength , int maxIter , int chopSize , int overlap , int proportion, int k , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output ) 
 {
 	int subDim = 3 ; 
 	int cols = 256 ; 
@@ -36,7 +36,7 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 		fprintf( stderr , "Calculating kmers for SAG\n" ) ;  
 	// Calculate kmer matrix for the SAG 
 	int *sagKmers_int = NULL ; // = (int*) malloc( cols * sagN * sizeof(int) ) ; 
-	posixCounter( sag , sagN , threads , chopSize , overlap , &sagKmers_int , &tmp , &sagNamesIdx ) ; 
+	posixCounter( sag , sagN , minLength , threads , chopSize , overlap , &sagKmers_int , &tmp , &sagNamesIdx ) ; 
 	sagN = tmp ; // NOTICE CHANGE OF sagN 
 	double *sagKmers = (double*) malloc( cols * sagN * sizeof(double) ) ; 
 	intToDoubleMat( sagKmers_int , &sagN , &cols , sagKmers ) ; 
@@ -45,7 +45,7 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 		fprintf( stderr , "Calculating kmers for Metagenome\n" ) ;
 	// Calculate kmer matrix for the gm 
 	int *gmKmers_int = NULL ; // (int*) malloc( cols * gmN * sizeof(int) ) ; 
-	posixCounter( gm , gmN , threads , chopSize , overlap , &gmKmers_int , &tmp , &names ) ;  
+	posixCounter( gm , gmN , minLength , threads , chopSize , overlap , &gmKmers_int , &tmp , &names ) ;  
 	gmN = tmp ; // NOTICE CHANGE OF  gmN  
 	double *gmKmers = (double*) malloc( cols * gmN * sizeof(double) ) ; 
 	
@@ -74,6 +74,20 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	// Append matrices 
 	double *bigK = (double*) malloc( cols * rows * sizeof(double) ) ; 
 	appendRows ( gmKmers , sagKmers , &gmN , &sagN , &cols , bigK ) ; 
+	
+	// convert to proportions, if requested 
+        if( proportion == 1 ) 
+        {   
+                double sum ; 
+                for( i = 0 ; i < rows ; i++ ) 
+                {   
+                        sum = 0.0 ; 
+                        for( j = 0 ; j < cols ; j++ ) 
+                                sum += bigK[ i + rows * j ] ; 
+                        for( j = 0 ; j < cols ; j++ ) 
+                                bigK[ i + rows * j ] = bigK[ i + rows * j ] / sum ; 
+                }   
+        }
 	
 	if( kmerFreq != NULL ) // report kmers and quit 
 	{
@@ -104,20 +118,6 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 			printf( "%f " , bigK[ k + rows * l ] ) ; 
 		printf( "\n" ) ; 
 	}*/
-	
-	// convert to proportions, if requested 
-	if( proportion = 1 ) 
-	{
-		double sum ; 
-		for( i = 0 ; i < rows ; i++ ) 
-		{
-			sum = 0.0 ; 
-			for( j = 0 ; j < cols ; j++ ) 
-				sum += bigK[ i + rows * j ] ; 
-			for( j = 0 ; j < cols ; j++ ) 
-				bigK[ i + rows * j ] = bigK[ i + rows * j ] / sum ; 
-		}
-	}
 	
 	// standardizes dimensions 
 	double *standardK = (double*) malloc( cols * rows * sizeof(double) ) ; 
@@ -242,7 +242,8 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	double *sqRtMat = (double*) malloc( subDim * subDim * sizeof(double) ) ; 
 	double *covEigVecs = (double*) malloc( subDim * subDim * sizeof(double) ) ; 
 	double *covEigVals = (double*) malloc( subDim * sizeof(double) ) ; 
-	qrEig ( cov , &subDim , &eps, &minIter , &maxIter , covEigVals , covEigVecs ) ; 
+	// qrEig ( cov , &subDim , &eps, &minIter , &maxIter , covEigVals , covEigVecs ) ; 
+	psdEig( cov , &subDim , &eps , covEigVecs , covEigVals ) ; 
 	double *diagMat = (double*) malloc( subDim * subDim * sizeof(double) ) ; 
 	for( i = 0 ; i < subDim ; i++ )
 	{

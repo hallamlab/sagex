@@ -24,11 +24,11 @@ int checkArgs(int hFlag, int errFlag, char *input, char *Gm, char *blastout, int
 \tAn integer representing the minimum number of base-pairs of the SAG aligned to the metagenome to be considered a good hit. [DEFAULT = 2000]\n\
 \n\t\tContig uniformity options:\n\
 -c: \n\
-\tThe desired length (in base-pairs) of the chopped contig. [DEFAULT = 2000]\n\
+\tThe desired length (in base-pairs) of the chopped contig. If less than one, entire contigs will be used. [DEFAULT = 2000]\n\
 -x: \n\
 \tThe number of base-pairs overlapping between each of the chopped contigs. [DEFAULT = 500]\n\
 -P: \n\
-\tDo not chop contigs. Run kmer proportions. Supersedes -c & -x.\n\
+\tDo not chop contigs. Run kmer proportions. Supersedes -x.\n\
 \n\t\tClassification and Extrapolation-specific options:\n\
 -k: \n \
 \tDesired number of Gaussians in the mixture model. [DEFAULT = 1]\n\
@@ -39,9 +39,9 @@ int checkArgs(int hFlag, int errFlag, char *input, char *Gm, char *blastout, int
 -E: \n\
 \tConvergance parameter for Eigen value calculation. [DEFAULT = 0.0000001]\n\
 -m: \n\
-\tThe minimum number of iterations for Eigen value calculation. [DEFAULT = 10]\n\
+\tMinimum contig length. [DEFAULT = 2000]\n\
 -M: \n\
-\tThe maximum number of iterations for Eigen value calculation. [DEFAULT = 1000]\n\
+\tThe maximum number of iterations for numerical integration and bootstraps. [DEFAULT = 1000]\n\
 \n\t\tOther options:\n\
 -X: \n\
 \tA file to write the kmer PCA in an R-readable format.\n\
@@ -106,7 +106,7 @@ int main( int argc, char *argv[] ) {
     double Alpha = 0.05;
     double Beta = 0.8;
     double eps = 0.0000001;
-    int itMin = 10;
+    int itLen = 2000;
     int itMax = 100000;
     int threads = 1;
     int c, errFlag, verbose, proportionFlag, hFlag;
@@ -132,11 +132,6 @@ int main( int argc, char *argv[] ) {
                 output = optarg;
                 break;
             case 'c':
-                if (proportionFlag = 1) {
-                    proportionFlag = -1;
-                    errFlag++;
-                }
-                else
                     chopSize = atoi(optarg);
                 break;
             case 'x':
@@ -163,7 +158,7 @@ int main( int argc, char *argv[] ) {
                 eps = atof(optarg);
                 break;
             case 'm':
-                itMin = atoi(optarg);
+                itLen = atoi(optarg);
                 break;
             case 'M':
                 itMax = atoi(optarg);
@@ -250,7 +245,7 @@ printf( "DEBUG chopping SAG...\n" ) ;
 	else
 		hitPtr = &hits ;
 
-    classify ( SAG.sequence , SAG.N_contigs , SAG.header , metBag.sequence , metBag.N_contigs , metBag.header , Alpha , Beta , threads , eps , itMin , itMax , chopSize , overlap , proportionFlag , k , verbose , kmerFreq , kmerPCA , hitPtr , output);
+    classify ( SAG.sequence , SAG.N_contigs , SAG.header , metBag.sequence , metBag.N_contigs , metBag.header , Alpha , Beta , threads , eps , itLen , itMax , chopSize , overlap , proportionFlag , k , verbose , kmerFreq , kmerPCA , hitPtr , output);
 	 
 	return 0 ; 
 }

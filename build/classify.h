@@ -17,7 +17,7 @@
 // beta : proportion of shared names that need to be IN the SAG 
 // threads : the desired number of posix threads for this task 
 // eps : PCA convergence error parameter 
-// minIter : PCA minimum number of iterations 
+// minLength : minimum length for contigs
 // maxIter : PCA maximum number of iterations , max iterations in gamma dist integration or max bootstraps in qGMM integration  
 // chopsSize : 
 // overlap : 
@@ -25,7 +25,7 @@
 // verbose : describe process in stderr if > 0 
 // kmerFreq : writes kmers to file specified 
 // out : a pointer to be allocated with the int-names of contigs which have been classified as IN the SAG 
-void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minIter , int maxIter , int chopSize , int overlap , int proportion, int k , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output) ; 
+void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minLength , int maxIter , int chopSize , int overlap , int proportion, int k , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output) ; 
 
 // Standardizes the columns of a matrix 
 void colStandardize( double *mat , int *rows , int *cols , double *out ) ; 

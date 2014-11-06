@@ -6,8 +6,6 @@
 // chopSize : length of substring of nucs used to count kemrs 
 void tetraCounterChop ( char *nucs , int *out , int chopSize ) 
 {
-        // printf( "DEBUG: counting for %s\n" , nucs ) ; 
-
         char gen[] = {'A' , 'T' , 'C' , 'G' } ;
         char tetra[]= { 'A' , 'A' , 'A' , 'A' , '\0' } ;
         int idx[] = { 0 , 0 , 0 , 0 } ;
@@ -18,7 +16,7 @@ void tetraCounterChop ( char *nucs , int *out , int chopSize )
         {
                 // count tetra occurrences in string i 
                 out[i] = count( &tetra[0] , nucs , chopSize ) ;
-
+		
                 // printf( "%s: %i\n" , tetra , out[i] ) ; // DEBUG 
 
                 // iterate to next tetra 

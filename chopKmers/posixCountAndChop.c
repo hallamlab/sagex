@@ -11,7 +11,8 @@ struct parg // posix arg
 	int chopSize ; 
 	int overlap ;  
 	int **names ; 
-	int threadNum ;  
+	int threadNum ; 
+	int minLen ;  
 }; 
 
 int countChops ( char *str , int chopSize , int overlap ) 
@@ -35,12 +36,21 @@ void *pCount ( void *targ ) // temp arg
 	{
 		for( i = arg->start ; i < arg->end ; i++ ) 
 		{
-			tmp = countChops( arg->fasta[i] , arg->chopSize , arg->overlap ) ; 
-			n += tmp ; 
+			if( strlen( arg->fasta[i] ) > arg->minLen ) 
+			{
+				tmp = countChops( arg->fasta[i] , arg->chopSize , arg->overlap ) ; 
+				n += tmp ; 
+			}
 		}
 	}
-	else // one kmer vector per contig  
-		n = arg->end - arg->start ; 
+	else // at most one kmer per contig 
+	{
+		for( i = arg->start ; i < arg->end ; i++ ) 
+		{
+			if( strlen( arg->fasta[i] ) > arg->minLen ) 
+				n++ ; 
+		}
+	}
 	
 	*(arg->cols) = n ; 
 	
@@ -59,8 +69,15 @@ void *pCount ( void *targ ) // temp arg
 	tmp = strlen( arg->fasta[ j ] ) ; 
 	if( arg->chopSize > 0 ) // chop up contigs  
 	{ 
+		// skip all short contigs  
+		while( strlen( arg->fasta[i] ) > arg->minLen && i < n ) 
+			i++ ; 
 		while( i < n )  
 		{
+			// skip all short contigs 
+			while( strlen( arg->fasta[i] ) > arg->minLen && i < n ) 
+				i++ ; 
+			
 			if( k * m + arg->chopSize > tmp ) // switch to next sequence 
 			{
 				j = j + 1 ; 
@@ -83,13 +100,18 @@ void *pCount ( void *targ ) // temp arg
 	}
 	else // do not chop up contigs 
 	{ 
+		j = 0 ; 
 		for( i = arg->start ; i < arg->end ; i++ ) // one kmer vector per contig  
 		{
-			tetraCounterChop( arg->fasta[i] , &( (*(arg->out))[ 256 * i ] ) , strlen( arg->fasta[i] ) ) ; 
-			
-			// name the contig, if requested 
-			if( arg->names != NULL ) 
-				(*arg->names)[i] = i ; 
+			if( strlen( arg->fasta[i] ) > arg->minLen ) 
+			{
+				tetraCounterChop( arg->fasta[i] , &( (*(arg->out))[ 256 * j ] ) , strlen( arg->fasta[i] ) ) ; 
+				
+				// name the contig, if requested 
+				if( arg->names != NULL ) 
+					(*arg->names)[j] = i ; 
+				j++ ; 
+			} 
 		}
 	}
 	pthread_exit(NULL) ; 
@@ -97,10 +119,11 @@ void *pCount ( void *targ ) // temp arg
 
 // fasta : an array of strings, only ATCG characters allowed  
 // n : the number of strings 
+// minLen : minimum contig length  
 // out : a non-allocated pointer to an int pointer to store a 256 X ? matrix  
 // outN : the number of columns of out 
 // names : an output for enumerating the names of sequences, if NULL nothing will be output 
-void posixCounter( char **fasta , int n , int threads , int chopSize , int overlap , int **out , int *outN , int **names ) 
+void posixCounter( char **fasta , int n , int minLen , int threads , int chopSize , int overlap , int **out , int *outN , int **names ) 
 {
 	if( threads > n )
 		threads = n ; 
@@ -127,6 +150,7 @@ void posixCounter( char **fasta , int n , int threads , int chopSize , int overl
 		pargs[i].out = &mats[i] ; 
 		pargs[i].cols = &cols[i] ; 
 		pargs[i].threadNum = i ; 
+		pargs[i].minLen = minLen ; 
 		
 		if( names != NULL ) 
 			pargs[i].names = &nameTemp[i] ; 
@@ -192,7 +216,7 @@ void posixCounter( char **fasta , int n , int threads , int chopSize , int overl
 		
 		free( mats[i] ) ; 
 	}
-
+	
 	free( thr ) ; 
 	free( pargs ) ; 
 	free( mats ) ; 
