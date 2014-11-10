@@ -86,6 +86,7 @@ void *pCount ( void *targ ) // temp arg
 			}
 			
 			tetraCounterChop( &(arg->fasta[j][k*m]) , &( (*(arg->out))[ 256 * i ] ) , arg->chopSize ) ; 
+// int l ; int flag = 0 ; for( l = 0 ; l < 256 && flag == 0 ; l++ ){ if( (*(arg->out))[ l + 256 * i ] > 0 ){ flag = 1 ; } } ; if( flag == 0 ) fprintf( stderr , "DEBUG!\n" ) ; 
 			
 			// name the chop, if requested 
 			if( arg->names != NULL ) 
@@ -192,6 +193,7 @@ void posixCounter( char **fasta , int n , int minLen , int threads , int chopSiz
 	}
 	// allocate the out-going matrix 
 	*out = (int*) malloc( *outN * 256 * sizeof(int) ) ; 
+fprintf( stderr , "%i %i %i %i\n" , (*out)[0], (*out)[1], (*out)[2], (*out)[3] ) ; // prints zeros !!!  
 	
 	// allocate name space, if requested 
 	if( names != NULL ) 
@@ -207,6 +209,7 @@ void posixCounter( char **fasta , int n , int minLen , int threads , int chopSiz
 		{
 			for( k = 0 ; k < 256 ; k++ ) 
 				(*out)[ m + *outN * k ] = mats[i][ k + 256 * j ] ; // notice transpose  
+//for( k = 0 ; k < 256 ; k++ ) fprintf( stderr , "%i " , mats[i][ k + 256 * j ] ) ; fprintf( stderr , "\n" ) ; // zeros in mats[i][*] 
 			
 			// record the name, if requested 
 			if( names != NULL ) 
@@ -216,6 +219,7 @@ void posixCounter( char **fasta , int n , int minLen , int threads , int chopSiz
 		
 		free( mats[i] ) ; 
 	}
+// for( i = 0 ; i < *outN ; i++ ){int flag = 0; for( j=0 ;j < 256 && flag == 0 ; j++ ) { if( (*out)[ j + 256 * i ] > 0 ) flag = 1 ; } ; if( flag == 0 ) fprintf( stderr , "D!\n" ) ; } 
 	
 	free( thr ) ; 
 	free( pargs ) ; 

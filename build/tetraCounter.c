@@ -12,11 +12,13 @@ void tetraCounterChop ( char *nucs , int *out , int chopSize )
 
         int i = 0 ;
         int j ;
+// int flag = 0 ;
         while( i < 256 )
         {
                 // count tetra occurrences in string i 
                 out[i] = count( &tetra[0] , nucs , chopSize ) ;
 		
+// if( out[i] > 0 ) flag = 1 ; 
                 // printf( "%s: %i\n" , tetra , out[i] ) ; // DEBUG 
 
                 // iterate to next tetra 
@@ -33,6 +35,7 @@ void tetraCounterChop ( char *nucs , int *out , int chopSize )
                 for( j = 0 ; j < 4 ; j++ )
                         tetra[j] = gen[ idx[j] ] ;
         }
+// if( flag == 0 ) fprintf( stderr ,"DEBUG: err: chopSize: %i\n" , chopSize ) ; 
 }
 
 

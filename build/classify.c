@@ -57,17 +57,16 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 		printf( "%s\n" , gm[k] ) ; 
 	*/
 	
-	/*
-	int k , l ; 
-	for( k = 0 ; k < gmN ; k++ ) 
+	///* 
+	for( i = 0 ; i < sagN ; i++ ) 
 	{ 
-		for( l = 0 ; l < cols ; l++ ) 
+		for( j = 0 ; j < cols ; j++ ) 
 		{
 			// printf( "DEBUG seg, k: %i, l: %i\n" , k , l ) ; 
-			printf( "%i " , gmKmers_int[k + gmN * l] ) ;  
+			fprintf( stderr , "%i " , sagKmers_int[i + sagN * j] ) ;  
 		}
-		printf( "\n" ) ; 
-	}*/
+		fprintf( stderr , "\n" ) ; 
+	}//*/ 
 	
 	intToDoubleMat( gmKmers_int , &gmN , &cols , gmKmers ) ; 
 	
@@ -111,12 +110,11 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	}
 	
 	/*
-	int k , l ; 
-	for( k = 0 ; k < rows ; k++ ) 
+	for( i = 0 ; i < rows ; i++ ) 
 	{
-		for( l = 0 ; l < cols ; l++ ) 
-			printf( "%f " , bigK[ k + rows * l ] ) ; 
-		printf( "\n" ) ; 
+		for( j = 0 ; j < cols ; j++ ) 
+			fprintf( stderr , "%f " , bigK[ i + rows * j ] ) ; 
+		fprintf( stderr , "\n" ) ; 
 	}*/
 	
 	// standardizes dimensions 
@@ -139,12 +137,11 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	corrMat ( standardK , &rows , &cols , corr ) ; 
 	
 	/*
-	int l ; 
-	for( k = 0 ; k < cols ; k++ ) 
+	for( i = 0 ; i < cols ; i++ ) 
 	{
-		for( l = 0 ; l < cols ; l++ ) 
-			printf( "%f " , corr[k + cols * l] ) ; 
-		printf( "\n" ) ; 
+		for( j = 0 ; j < cols ; j++ ) 
+			fprintf( stderr , "%f " , corr[i + cols * j] ) ; 
+		fprintf( stderr , "\n" ) ; 
 	}
 	*/
 	
@@ -158,17 +155,16 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	
 	/*
 	printf( "Eigen values: " ) ; 
-	int k ; 
-	for( k = 0 ; k < subDim ; k++ ) 
-		printf( "%f " , eigVals[k] ) ; 
-	printf( "\n" ) ; 
+	for( i = 0 ; i < subDim ; i++ ) 
+		fprintf( stderr , "%f " , eigVals[i] ) ; 
+	fprintf( stderr , "\n" ) ; 
 	*/
 	/*
-	for( k = 0 ; k < cols ; k++ ) 
+	for( i = 0 ; i < cols ; i++ ) 
 	{
-		for( l = 0 ; l < cols ; l++ ) 
-			printf( "%f " , eigVecs[ k + cols * l ] ) ; 
-		printf( "\n" ) ; 
+		for( j = 0 ; j < cols ; j++ ) 
+			fprintf( stderr , "%f " , eigVecs[ i + cols * j ] ) ; 
+		fprintf( stderr , "\n" ) ; 
 	}*/
 	
 	if( verbose > 0 ) 

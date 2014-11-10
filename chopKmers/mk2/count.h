@@ -27,8 +27,9 @@ void totalWorkItems( int *sub , int n , int *lengths , int chopSize , int overla
 // use when not chopping contigs 
 // sub : n-sized subset of indices of counted contigs 
 // lengths : lengths of all contigs 
+// chopSize : if < 1 , work will be the entire contig length, else it will be of chopSize per task 
 // out : output, n-length list of cumulative work 
-void getCumulativeWork ( int *sub , int n , int *lengths , int *out ) ; 
+void getCumulativeWork ( int *sub , int n , int *lengths , int chopSize , int *out ) ; 
 
 // records works items for threads 
 // behaviour depends on chopSize 

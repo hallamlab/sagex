@@ -27,13 +27,25 @@ void totalWorkItems( int *sub , int n , int *lengths , int chopSize , int overla
 // use when not chopping contigs 
 // sub : n-sized subset of indices of counted contigs 
 // lengths : lengths of all contigs 
+// chopSize : if < 1 , work will be the entire contig length, else it will be of chopSize per task 
 // out : output, n-length list of cumulative work 
-void getCumulativeWork ( int *sub , int n , int *lengths , int *out ) 
+void getCumulativeWork ( int *sub , int n , int *lengths , int chopSize , int *out ) 
 {
-	out[0] = lengths[ sub[0] ] ; 
 	int i ; 
-	for( i = 1 ; i < n ; i++ ) 
-		out[i] = out[i-1] + lengths[ sub[i] ] ; 
+	if( chopSize < 1 ) 
+	{
+		out[0] = lengths[ sub[0] ] ; 
+		for( i = 1 ; i < n ; i++ ) 
+			out[i] = out[i-1] + lengths[ sub[i] ] ; 
+		return ; 
+	}
+	else
+	{
+		// TODO this does not need to be explicitly recorded  
+		for( i = 1 ; i <= n ; i++ ) 
+			out[i-1] = i * chopSize ; 
+		return ; 
+	}
 }
 
 // records works items for threads 
@@ -53,7 +65,7 @@ void recordWorkItems( int *sub , int n , int workN , int *lengths , int chopSize
 		for( i = 0 ; i < n ; i++ ) 
 		{
 			seq[i] = sub[i] ; 
-			loc[i] = sub[i] ; 
+			loc[i] = 0 ; // sub[i] ; 
 		}
 		return ; 
 	}
@@ -103,7 +115,7 @@ void divideTasks ( int *work , int workN , int *starts , int *ends , int threads
 			prev = work[i] ; 
 			if( thr + 1 == threads ) 
 			{
-				ends[ thr ] == workN ; 
+				ends[ thr ] = workN ; 
 			}
 			else 
 			{
