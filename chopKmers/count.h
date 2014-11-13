@@ -2,7 +2,20 @@
 #include <stdio.h> 
 #include <stdlib.h> 
 #include <string.h> 
+#include <math.h>
 #include <pthread.h> 
+
+// Counts kmer vectors for a fasta file 
+// fasta : array of sequences 
+// n : number of sequences 
+// minLength : shortest length allowed for sequences 
+// chopSize : if > 0 , contigs will be chopped into sub-segments of this length prior to counting, otherwise they will be counted in entirety 
+// overlap : number of shared characters between chops 
+// threads : number of POSIX threads available for computation 
+// out : output, location of a pointer to be allocated by countKmers. Represents an outN X 256 column-major order matrix 
+// owIdx : sequence IDs of the rows 
+// outN : output, number of rows in the output matrix 
+void countKmers ( char **fasta , int n , int minLength , int chopSize , int overlap , int threads , int **rowIdx , int **out , int *outN ) ; 
 
 // calculates kmers in O(n) time 
 // nucs : a string, should only contain the characters 'A', 'T', 'C', & 'G' 
@@ -27,9 +40,8 @@ void totalWorkItems( int *sub , int n , int *lengths , int chopSize , int overla
 // use when not chopping contigs 
 // sub : n-sized subset of indices of counted contigs 
 // lengths : lengths of all contigs 
-// chopSize : if < 1 , work will be the entire contig length, else it will be of chopSize per task 
 // out : output, n-length list of cumulative work 
-void getCumulativeWork ( int *sub , int n , int *lengths , int chopSize , int *out ) ; 
+void getCumulativeWork ( int *sub , int n , int *lengths , int *out ) ; 
 
 // records works items for threads 
 // behaviour depends on chopSize 
@@ -46,6 +58,7 @@ void recordWorkItems( int *sub , int n , int workN , int *lengths , int chopSize
 // work : workN-length array of work accumulation 
 // starts : output, threads-length array to store initial work items, inclusive 
 // ends : output, threads-length array to store final work items, non-inclusive   
-void divideTasks ( int *work , int workN , int *starts , int *ends , int threads ) ; 
+// returns actual number of threads needed 
+int divideTasks ( int *work , int workN , int chopSize , int *starts , int *ends , int threads ) ; 
 
 

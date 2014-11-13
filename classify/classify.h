@@ -2,7 +2,8 @@
 #include "matrix.h" 
 #include "gammaDist.h" 
 // #include "shared.h" 
-#include "chopCounter.h" 
+//#include "chopCounter.h" 
+#include "count.h"
 #include "gaussMix.h"
 #include "gmmPval.h"
 

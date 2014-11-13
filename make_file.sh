@@ -24,5 +24,5 @@ rm ./build/*.o
 rm ./build/*.so
 rm ./build/*.R
 
-g++ -o sagex ./build/SAG_extrapolator.cpp ./build/parse_Blastoutput.cpp ./build/FastaParser.cpp ./build/Genome.cpp ./build/metBagger.cpp ./build/counter.c ./build/tetraCounter.c ./build/posixCountAndChop.c ./build/gammaDist.c ./build/matrix.c ./build/stat.c ./build/gmmPval.c ./build/gaussMix.c ./build/kmeans.c ./build/classify.c -pthread
+g++ -o sagex ./build/SAG_extrapolator.cpp ./build/parse_Blastoutput.cpp ./build/FastaParser.cpp ./build/Genome.cpp ./build/metBagger.cpp ./build/count.c ./build/kmers.c ./build/minLength.c ./build/recordTasks.c ./build/gammaDist.c ./build/matrix.c ./build/stat.c ./build/gmmPval.c ./build/gaussMix.c ./build/kmeans.c ./build/classify.c -pthread
 

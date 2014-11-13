@@ -26,8 +26,8 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	int cols = 256 ; 
 	int rows = gmN + sagN ; 
 	int tmp ; 
-	int *names = NULL ; // never freed ??  
-	int *sagNamesIdx = NULL ; 
+	int *names = NULL ; // never freed 
+	int *sagNamesIdx = NULL ; // never freed 
 	double eigenEps = eps * 0.0001 ;  
 	
 	int i , j ; 
@@ -36,7 +36,8 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 		fprintf( stderr , "Calculating kmers for SAG\n" ) ;  
 	// Calculate kmer matrix for the SAG 
 	int *sagKmers_int = NULL ; // = (int*) malloc( cols * sagN * sizeof(int) ) ; 
-	posixCounter( sag , sagN , minLength , threads , chopSize , overlap , &sagKmers_int , &tmp , &sagNamesIdx ) ; 
+	// posixCounter( sag , sagN , minLength , threads , chopSize , overlap , &sagKmers_int , &tmp , &sagNamesIdx ) ; 
+	countKmers ( sag , sagN , minLength , chopSize , overlap , threads , &sagNamesIdx , &sagKmers_int , &tmp ) ; 
 	sagN = tmp ; // NOTICE CHANGE OF sagN 
 	double *sagKmers = (double*) malloc( cols * sagN * sizeof(double) ) ; 
 	intToDoubleMat( sagKmers_int , &sagN , &cols , sagKmers ) ; 
@@ -45,7 +46,8 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 		fprintf( stderr , "Calculating kmers for Metagenome\n" ) ;
 	// Calculate kmer matrix for the gm 
 	int *gmKmers_int = NULL ; // (int*) malloc( cols * gmN * sizeof(int) ) ; 
-	posixCounter( gm , gmN , minLength , threads , chopSize , overlap , &gmKmers_int , &tmp , &names ) ;  
+	// posixCounter( gm , gmN , minLength , threads , chopSize , overlap , &gmKmers_int , &tmp , &names ) ;  
+	countKmers ( gm , gmN , minLength , chopSize , overlap , threads , &names , &gmKmers_int , &tmp ) ;
 	gmN = tmp ; // NOTICE CHANGE OF  gmN  
 	double *gmKmers = (double*) malloc( cols * gmN * sizeof(double) ) ; 
 	
@@ -57,7 +59,7 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 		printf( "%s\n" , gm[k] ) ; 
 	*/
 	
-	///* 
+	/* 
 	for( i = 0 ; i < sagN ; i++ ) 
 	{ 
 		for( j = 0 ; j < cols ; j++ ) 
@@ -66,7 +68,7 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 			fprintf( stderr , "%i " , sagKmers_int[i + sagN * j] ) ;  
 		}
 		fprintf( stderr , "\n" ) ; 
-	}//*/ 
+	}*/ 
 	
 	intToDoubleMat( gmKmers_int , &gmN , &cols , gmKmers ) ; 
 	

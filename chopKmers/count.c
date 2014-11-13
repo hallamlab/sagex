@@ -36,9 +36,13 @@ void kmerCounter ( char *nucs , int maxLen , int *out )
            		case 'g':
                       		indx = 4*indx + 3;  
                       		break;
+			case 'N': 
+			case 'n': 
+				break ; // skip unknowns 
            		default:
                       	j=0;
-			fprintf( stderr , "ERROR: kmerCounter: invalid character: %c\n" , *nucs ) ; 
+			fprintf( stderr , "ERROR: kmerCounter: invalid character: %c, %s\n" , *nucs , nucs ) ; 
+			return ; 
        		}   
        		j++;
        		nucs++;
