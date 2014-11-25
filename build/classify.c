@@ -32,25 +32,94 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	
 	int i , j ; 
 	
+	 
 	if( lcsCut > 0 ) 
 	{
 		if( verbose > 0 ) 
-			fprintf( stderr , "Calculating longest common substring subset\n" ) ; 
-		int *subset = (int*) malloc( gmN * sizeof(int) ) ; 
-		int subN ; 
-		lcsPosix ( sag , sagN , gm , gmN , lcsCut , subset , &subN , threads ) ; 
-		subN = gmN ; 
-		for( i = 0 ; i < subN ; i++ ) 
+			fprintf( stderr , "Constructing kmer lookup table\n" ) ; 
+		
+		// get key information  
+		int hashKeySize , preKeySize , lastKeySize ; 
+		sHashGetKeySize ( lcsCut , &hashKeySize , &preKeySize , &lastKeySize ) ; 
+		
+		// evaluate SAG entries for entrance into the dictionary 
+		size_t *lengths = (size_t*) malloc( sagN * sizeof(size_t) ) ; 
+		size_t total = 0 ; 
+		size_t tmpT ; 
+		int listN = 0 ; 
+		for( i = 0 ; i < sagN ; i++ ) 
 		{
-			// subset[i] = i ; 
- // if( i != subset[i] ) fprintf( stderr , "lag: %i\n" , i - subset[i] ) ; 
-			gm[i] = gm[ subset[i] ] ; 
-			gmNames[i] = gmNames[ subset[i] ] ; 
+			tmpT = strlen( sag[i] ) ; 
+			lengths[i] = tmpT ; 
+			if( tmpT > minLength ) 
+			{
+				total += tmpT ; 
+				listN += tmpT - lcsCut + 1 ; 
+			}
+		}
+		ull *dictionary = (ull*) malloc( hashKeySize * total * sizeof(ull) ) ;  
+		total = 0 ;  
+		for( i = 0 ; i < sagN ; i++ ) 
+		{ 
+			if( lengths[i] > minLength ) 
+			{ 
+				// record entries 
+				sHashes ( sag[i] , hashKeySize , &(dictionary[total]) , preKeySize , lastKeySize , NULL , NULL , 0 ) ; 
+				total += (lengths[i] - lcsCut + 1) * hashKeySize ;  
+			} 
+fprintf( stderr , "\rSAG: %f%%" , 100.0f*((float) i)/((float) sagN) ) ; 
 		} 
-fprintf( stderr , "DEBUG gmN: %i, subN: %i\n" , gmN , subN ) ; 
-		gmN = subN ; // NOTICE CHANGE OF gmN 
-		rows = gmN + sagN ; 
-		free( subset ) ; 
+fprintf( stderr , "\rSAG: 100.0%%        \n" ) ; 
+		int *idx = (int*) malloc( listN * sizeof(int) ) ; 
+		for( i = 0 ; i < listN ; i++ ) 
+			idx[i] = hashKeySize * i ; 
+		
+		sHashQuickSort ( dictionary , idx , hashKeySize , listN ) ; 
+		
+		int *gmSubSet = (int*) malloc( gmN * sizeof(int) ) ; 
+		
+		free( lengths ) ; 
+		lengths = (size_t*) malloc( gmN * sizeof(size_t) ) ; 
+		tmp = 0 ; 
+		for( i = 0 ; i < gmN ; i++ ) 
+		{
+			lengths[i] = strlen( gm[i] ) ; 
+			if( lengths[i] > tmp ) 
+				tmp = lengths[i] ; 
+		} 
+		ull *hashTmp = (ull*) malloc( hashKeySize * tmp * sizeof(ull) ) ; 
+		
+		if( verbose > 0 ) 
+			fprintf( stderr , "Performing kmer lookups\n" ) ; 
+		
+		total = 0 ; 
+		for( i = 0 ; i < gmN ; i++ ) 
+		{ 
+			if( lengths[i] > minLength ) 
+			{ 
+				tmp = sHashes ( gm[i] , hashKeySize , hashTmp , preKeySize , lastKeySize , dictionary , idx , listN ) ; 
+				if( tmp > 0 ) 
+				{ 
+					gmSubSet[total] = i ; 
+					total++ ; 
+				} 
+			} 
+fprintf( stderr , "\rGM: %f%%" , 100.0f*((float) i)/((float) gmN) ) ; 
+		} 
+fprintf( stderr , "\rGM: 100.0%%          \nExtracted subset of size %lu\n" , total ) ; 
+		gmN = total ; // NOTICE UPDATE OF ESSENTIAL VARIABLE 
+		
+		// extract subset 
+		for( i = 0 ; i < total ; i++ ) 
+		{ 
+			gm[i] = gm[ gmSubSet[i] ] ; 
+		} 
+		
+		free( lengths ) ; 
+		free( dictionary ) ; 
+		free( idx ) ; 
+		free( gmSubSet ) ; 
+		free( hashTmp ) ; 
 	}
 	
 	if( verbose > 0 ) 

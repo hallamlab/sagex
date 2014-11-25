@@ -1,78 +1,291 @@
 
-#include <stdio.h> 
-#include <stdlib.h> 
-#include <limits.h> 
-#include <string.h> 
+#include "kbag.h" 
 
 typedef unsigned long long ull ; 
 
-struct kbag 
+int min( int a , int b ) 
 {
-	ull n ; 
-	ull logn ; // for O( log log n ) lookups 
-	ull *bag ; 
-}; 
-
-void counter ( char *nucs , int *out , int k )  
-{
-        ull indx = 0, j = 0 ; 
-    
-        int i ; 
-        for( i = 0 ; *nucs != '\0' ; i++ )   
-        {   
-                switch(*nucs) 
-                {   
-                        case 'A':
-                        case 'a':
-                                indx = 4*indx + 0;  
-                                break;
-                        case 'T':
-                        case 't':
-                                indx = 4*indx + 1;  
-                                break;
-                        case 'C':
-                        case 'c':
-                                indx = 4*indx + 2;  
-                                break;
-                        case 'G':
-                        case 'g':
-                                indx = 4*indx + 3;  
-                                break;
-                        case 'N': 
-                        case 'n': 
-                                break ; // skip unknowns 
-                        default:
-                        j=0;
-                        fprintf( stderr , "ERROR: kmerCounter: invalid character: %c, %s\n" , *nucs , nucs ) ; 
-                        return ; 
-                }
-                j++;
-                nucs++;
-                indx = indx % 256;
-                if( j > 3)
-                        out[indx]++;
-        } // end while
+	return (a > b)? b : a ; 
 }
 
-void makeBag ( char **fasta , int n , kbag **bag , int k ) 
-{
-	int *lengths = (int*) malloc( n * sizeof(int) ) ; 
+// string hashes are arrays of ull, constant length n 
+// returns +1 if a > b, -1 if a < b , 0 if a = b  
+int sHashCompare ( ull *a , ull *b , int n ) 
+{ 
 	int i ; 
-	ull total = 0 ; 
 	for( i = 0 ; i < n ; i++ ) 
-	{ 
-		lengths[i] = strlen( fasta[i] ) ; 
-		if( lengths[i] >= k ) 
-			total += (ull) (lengths[i] - k-1) ; 
-	} 
-	if( total == 0 ) 
 	{
-		fprintf( stderr , "WARNING: makeBag: empty bag!\n" ) ; 
+		if( a[i] < b[i] ) 
+			return 1 ; 
+		if( a[i] > b[i] ) 
+			return -1 ; 
+	}
+	return 0 ; 
+} 
+
+// returns index if found, -1 otherwise 
+// key : the value to look up 
+// list : the memory location of the dictionary 
+// idx : the sorted indices of list entries 
+// listN : the number of list entries , assumed > 0  
+// n : the number of ull's required to store a hash  
+int sHashBinarySearch ( ull *key , ull *list , int *idx , int listN , int n ) 
+{
+	int upper = 0 ; 
+	int lower = listN-1 ; 
+	int mid = (upper + lower)/2 ; 
+	int c ; 
+	
+	while( upper <= lower ) 
+	{
+		c = sHashCompare( key , &(list[idx[mid]]) , n ) ; 
+		if( c < 0 ) 
+		{
+			upper = mid + 1 ; 
+		}
+		else if( c == 0 ) 
+		{
+			return idx[mid] ; 
+		}
+		else
+		{
+			lower = mid - 1 ; 
+		}
+		mid = (upper + lower)/2 ; 
+	} 
+	return -1 ; 
+}
+
+// TODO this currently allows for duplicate storage. This could result in a RAM explosion! 
+// quick sorts a list of sHashes 
+// list : storage space for the ulls 
+// idx : storage place for the ull IDs 
+// listN : number of sHashes in list 
+// n : number of ull's per sHash 
+void sHashQuickSort ( ull *list , int *idx , int n , int listN ) 
+{
+	if( listN <= 1 ) 
 		return ; 
+	int tmp , c ; 
+	if( listN == 2 ) 
+	{ 
+		c = sHashCompare( &(list[idx[0]]) , &(list[idx[1]]) , n ) ; 
+		if( c < 0 ) // idx_0 > idx_1 
+		{
+			tmp = idx[1] ; 
+			idx[1] = idx[0] ; 
+			idx[0] = tmp ; 
+		}
+		return ; 
+	} 
+	int pivot = listN - 1 ; 
+	int i ; 
+	int j = 0 ; 
+	for( i = 0 ; i < listN-1 ; i++ ) 
+	{
+		c = sHashCompare( &(list[idx[i]]) , &(list[idx[pivot]]) , n ) ; 
+		if( c > 0 ) // idx_i > idx_pivot 
+		{
+			tmp = idx[i] ; 
+			idx[i] = idx[j] ; 
+			idx[j] = tmp ; 
+			j++ ; 			
+		}
+	} 
+	tmp = idx[j] ; 
+	idx[j] = idx[pivot] ; 
+	idx[pivot] = tmp ;
+// printf( "DEBUG j: %i, " , j ) ;  
+// for( i = 0 ; i < listN ; i++ ) printf( "%llu " , list[idx[i]] ) ; printf( "\n" ) ; 
+	
+	sHashQuickSort( list , idx , n , j ) ; 
+	sHashQuickSort( list , &(idx[j+1]) , n , listN - j - 1 ) ; 
+}
+
+// get number of ull's required to store a key for a kmer of size k  
+// k : kmer length 
+// n : output , number of ull's required to store a key for a kmer of size k 
+// preN : number of characters to represent in the first n-1 hash chunks 
+// lastN : number of character to represent in the n-th hash chunk    
+void sHashGetKeySize ( int k , int *n , int *preN , int *lastN ) 
+{ 
+	// calculate the number of characters to be stored per  
+	ull space = ULLONG_MAX ; 
+	*preN = 0 ; 
+	while( space > 3 && *preN < k ) // counting protects against roundoff errors 
+	{ 
+		space /= 4 ; 
+		(*preN)++ ; 
+	} 
+	
+	*n = 1 ; 
+	if( *preN == k )  
+		*lastN = *preN ; 
+	else 
+	{
+		*n = k / *preN ; 
+		if( *preN * *n < k ) 
+		{
+			*lastN = k - *n * *preN ; 
+			(*n)++ ; 
+		}
+		else
+		{
+			*lastN = *preN ; 
+		}
+	}
+} 
+
+// defunkt 
+// calculate the hash for a string 
+// not designed to calculate hashes for all substrings 
+// s : the string 
+// m : number of characters to store per hash chunk 
+// h : where to store the hash 
+void sHash ( char *s , int n , int m , ull *h ) 
+{
+	int i = n-1 ; // h index, notice the big endian  
+	int j = 0 ; // characters since last hash chunk 
+	
+	h[i] = 0 ; 
+	ull idx = 0 ; 
+	while( *s != '\0' ) 
+	{
+		switch(*s) 
+		{
+			case 'A': 
+			case 'a': 
+				idx = 4*idx + 0 ; 
+				break ; 
+			case 'T': 
+			case 't': 
+				idx = 4*idx + 1 ; 
+			case 'C': 
+			case 'c': 
+				idx = 4*idx + 2 ; 
+			case 'G': 
+			case 'g': 
+				idx = 4*idx + 3 ; 
+			case 'N': 
+			case 'n': 
+				break ; // skip unknowns 
+			default: 
+				fprintf( stderr , "ERROR: sHash, bad character: %c\n" , *s ) ; 
+				return ; 
+		}
+		j++ ; 
+		if( j == m ) 
+		{
+			j = 0 ; 
+			h[i] = idx ; 
+			idx = 0 ;  
+			i-- ; 
+		}
+		s++ ; 
+	}
+	if( j < m ) 
+		h[i] = idx ; 
+}
+
+// calculates the hashes for all substrings of length cut 
+// a string of length N will have N - cut hashes 
+// s : the string to be have substrings hashed 
+// n : the number of ull's required to store a hash of size k  
+// dict : if not null, sHashes will perform lookups.  
+// sHashes will return 1 if a kmer from s is in dict , 0 otherwise. 
+// idx : must not be null if dict is not null. Stores the sorted indices of dict 
+// idxN : length of idx 
+// sHashes returns -1 on errors  
+int sHashes ( char *s , int n , ull *hash , int preN , int lastN , ull *dict , int *idx , int idxN ) 
+{ 
+	int tmp ; 
+	ull preC = 1 ; // pre-chunk size 
+	ull lastC = 1 ; // post-chunk size 
+	int i ; 
+	for( i = 0 ; i < preN ; i++ ) 
+		preC *= 4 ; 
+	for( i = 0 ; i < lastN ; i++ ) 
+		lastC *= 4 ; 
+	 
+	ull *chunks = (ull*) malloc( n * sizeof(ull) ) ; 
+	char **pos = (char**) malloc( n * sizeof(char*) ) ; 
+	for( i = 0 ; i < n-1 ; i++ ) 
+	{ 
+		chunks[i] = 0 ; 
+		pos[i] = s + i * preN ; // starting position is a multiple of preN 
+	}
+	if( n > 1 )  
+		pos[n-1] = s + (n-2) * preN + lastN ; 
+	else 
+		pos[n-1] = s ; 
+	
+	int j = 0 ; 
+	while( *(pos[n-1]) != '\0' ) 
+	{ 
+		for( i = 0 ; i < n ; i++ ) 
+		{ 
+			switch( *(pos[i]) ) 
+			{ 
+				case 'A': 
+				case 'a': 
+					chunks[i] = 4*chunks[i] + 0 ; 
+					break ; 
+				case 'T': 
+				case 't': 
+					chunks[i] = 4*chunks[i] + 1 ; 
+					break ; 
+				case 'C': 
+				case 'c': 
+					chunks[i] = 4*chunks[i] + 2 ; 
+					break ; 
+				case 'G': 
+				case 'g': 
+					chunks[i] = 4*chunks[i] + 3 ; 
+					break ; 
+				case 'N': 
+				case 'n': 
+					break ; // ignore unkowns 
+				default: 
+					fprintf( stderr , "ERROR: sHashes: invalid character: %c\n" , *(pos[i]) ) ; 
+					return -1 ; 
+			} 
+			(pos[i])++ ; 
+		}
+		j++ ; 
+		if( j >= preN ) 
+		{ 
+			for( i = 0 ; i < n-1 ; i++ ) 
+			{ 
+				chunks[i] = chunks[i] % preC ; 
+				hash[ i + n*(j-preN) ] = chunks[i] ; 
+			} 
+			chunks[n-1] = chunks[n-1] % lastC ; 
+			hash[ n-1 + n*(j-preN)] = chunks[n-1] ; 
+			if( dict != NULL ) 
+			{ 
+				tmp = sHashBinarySearch ( &(hash[n*(j-preN)]) , dict , idx , idxN , n ) ; 
+				if( tmp > -1 ) 
+					return 1 ; 
+			} 
+		}
 	}
 	
+	if( j < preN ) 
+		fprintf( stderr , "WARNING: sHashes, contig too short. j: %i, preN: %i\n" , j , preN ) ; 
 	
+	free( chunks ) ; 
+	free( pos ) ; 
 	
-	free( lengths ) ; 
-}
+	return 0 ; 
+} 
+
+
+
+
+
+
+
+
+
+
 

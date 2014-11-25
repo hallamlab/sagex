@@ -6,7 +6,8 @@
 #include "count.h"
 #include "gaussMix.h"
 #include "gmmPval.h" 
-#include "lcs.h"
+// #include "lcs.h"
+#include "kbag.h" 
 
 // Classifies contigs as IN a SAG 
 // sag : list of standard-length sag sequences 
