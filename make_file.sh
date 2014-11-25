@@ -18,11 +18,12 @@ cp ./classify/* ./build/
 cp ./interface/* ./build/
 cp ./gaussMix/* ./build/
 cp ./gmmPval/* ./build/
-cp ./kmeans/* ./build/
+cp ./kmeans/* ./build/ 
+cp ./lcsCut/* ./build/ 
 
 rm ./build/*.o
 rm ./build/*.so
 rm ./build/*.R
 
-g++ -o sagex ./build/SAG_extrapolator.cpp ./build/parse_Blastoutput.cpp ./build/FastaParser.cpp ./build/Genome.cpp ./build/metBagger.cpp ./build/count.c ./build/kmers.c ./build/minLength.c ./build/recordTasks.c ./build/gammaDist.c ./build/matrix.c ./build/stat.c ./build/gmmPval.c ./build/gaussMix.c ./build/kmeans.c ./build/classify.c -pthread
+g++ -g -o sagex ./build/SAG_extrapolator.cpp ./build/parse_Blastoutput.cpp ./build/FastaParser.cpp ./build/Genome.cpp ./build/metBagger.cpp ./build/count.c ./build/kmers.c ./build/minLength.c ./build/recordTasks.c ./build/gammaDist.c ./build/matrix.c ./build/stat.c ./build/gmmPval.c ./build/gaussMix.c ./build/kmeans.c ./build/classify.c ./build/lcs.h ./build/dpLcs.c ./build/lcsSubset.c ./build/lcsSubsetPosix.c -O2 -pthread
 

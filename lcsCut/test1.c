@@ -13,20 +13,25 @@ int main( int argc , char **argv )
 	char **a = (char**) malloc( 50 * sizeof(char*) ) ; 
 	char **b = (char**) malloc( 200 * sizeof(char*) ) ; 
 	
+	char numstr[10] ; 
 	int i, j ; 
 	for( i = 0 ; i < 50 ; i++ ) 
 	{
-		a[i] = (char*) malloc( 100 * sizeof(char) ) ; 
-		for( j = 0 ; j < 99 ; j++ ) 
+		sprintf( numstr , "%d" , i ) ; 
+		a[i] = (char*) malloc( 110 * sizeof(char) ) ; 
+		for( j = 0 ; j < 10 ; j++ ) 
 			a[i][j] = 'a' ; 
-		a[i][99] = '\0' ; 
+		a[i][10] = '\0' ; 
+		strcat( a[i] , numstr ) ;  
 	}
 	for( i = 0 ; i < 200 ; i++ ) 
 	{
-		b[i] = (char*) malloc( 100 * sizeof(char) ) ; 
-		for( j = 0 ; j < 99 ; j++ ) 
+		sprintf( numstr , "%d" , i ) ; 
+		b[i] = (char*) malloc( 110 * sizeof(char) ) ; 
+		for( j = 0 ; j < 10 ; j++ ) 
 			b[i][j] = 'b' ; 
-		b[i][99] = '\0' ; 
+		b[i][10] = '\0' ; 
+		strcat( b[i] , numstr ) ; 
 	}
 	
 	strcpy( a[5] , "xcdfhjqwuioqwertyuiopsdfghjvbn" ) ; 
@@ -41,6 +46,14 @@ int main( int argc , char **argv )
 	for( i = 0 ; i < subN ; i++ )
 	{
 		printf( "%i\n" , subset[i] ) ; 
-	}	
+	}
+	
+	for( i = 0 ; i < 50 ; i++ ) 
+		printf( "%i: %s\n" , i , a[i] ) ; 
+	for( i = 0 ; i < 200 ; i++ ) 
+		printf( "%i: %s\n", i , b[i] ) ; 
+	
 }
+
+
 

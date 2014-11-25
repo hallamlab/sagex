@@ -38,7 +38,7 @@ void lcsSubset ( char **ref , int refN , char **str , int strN , int cut , int* 
 		flag = 0 ; 
 		for( j = 0 ; j < refN && flag == 0 ; j++ ) 
 		{
-			len = dpLcs ( str[i] , strLengths[i] , ref[j] , refLengths[j] , tmp1 , tmp2 ) ; 
+			len = dpLcs ( str[i] , strLengths[i] , ref[j] , refLengths[j] , tmp1 , tmp2 , cut ) ; 
 			if( len >= cut ) 
 			{
 				flag = 1 ; 

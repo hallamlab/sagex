@@ -20,7 +20,7 @@
 // verbose : describe process in stderr if > 0 
 // kmerFreq : writes kmers to file specified 
 // out : a pointer to be allocated with the int-names of contigs which have been classified as IN the SAG 
-void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minLength , int maxIter , int chopSize , int overlap , int proportion, int k , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output ) 
+void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minLength , int maxIter , int chopSize , int overlap , int proportion, int k , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output , int lcsCut ) 
 {
 	int subDim = 3 ; 
 	int cols = 256 ; 
@@ -31,6 +31,27 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	double eigenEps = eps * 0.0001 ;  
 	
 	int i , j ; 
+	
+	if( lcsCut > 0 ) 
+	{
+		if( verbose > 0 ) 
+			fprintf( stderr , "Calculating longest common substring subset\n" ) ; 
+		int *subset = (int*) malloc( gmN * sizeof(int) ) ; 
+		int subN ; 
+		lcsPosix ( sag , sagN , gm , gmN , lcsCut , subset , &subN , threads ) ; 
+		subN = gmN ; 
+		for( i = 0 ; i < subN ; i++ ) 
+		{
+			// subset[i] = i ; 
+ // if( i != subset[i] ) fprintf( stderr , "lag: %i\n" , i - subset[i] ) ; 
+			gm[i] = gm[ subset[i] ] ; 
+			gmNames[i] = gmNames[ subset[i] ] ; 
+		} 
+fprintf( stderr , "DEBUG gmN: %i, subN: %i\n" , gmN , subN ) ; 
+		gmN = subN ; // NOTICE CHANGE OF gmN 
+		rows = gmN + sagN ; 
+		free( subset ) ; 
+	}
 	
 	if( verbose > 0 ) 
 		fprintf( stderr , "Calculating kmers for SAG\n" ) ;  

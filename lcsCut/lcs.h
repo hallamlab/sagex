@@ -8,7 +8,8 @@
 // a : a character array of length an 
 // b : a character array of length bn 
 // tmp1 , tmp2 : workingspace of length max(an,bn) 
-int dpLcs ( char *a , int an , char *b , int bn , int *tmp1 , int *tmp2 ) ; 
+// cut : if > 0 , process will return when a substring of size cut is found 
+int dpLcs ( char *a , int an , char *b , int bn , int *tmp1 , int *tmp2 , int cut ) ; 
 
 // subsets a set of strings (str) by minimum longest common substrings 
 // ref : the reference genome of refN-strings. 

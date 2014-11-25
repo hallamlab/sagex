@@ -5,7 +5,8 @@
 //#include "chopCounter.h" 
 #include "count.h"
 #include "gaussMix.h"
-#include "gmmPval.h"
+#include "gmmPval.h" 
+#include "lcs.h"
 
 // Classifies contigs as IN a SAG 
 // sag : list of standard-length sag sequences 
@@ -26,7 +27,7 @@
 // verbose : describe process in stderr if > 0 
 // kmerFreq : writes kmers to file specified 
 // out : a pointer to be allocated with the int-names of contigs which have been classified as IN the SAG 
-void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minLength , int maxIter , int chopSize , int overlap , int proportion, int k , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output) ; 
+void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minLength , int maxIter , int chopSize , int overlap , int proportion, int k , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output , int lcsCut ) ; 
 
 // Standardizes the columns of a matrix 
 void colStandardize( double *mat , int *rows , int *cols , double *out ) ; 

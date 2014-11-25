@@ -91,7 +91,7 @@ void lcsPosix ( char **ref , int refN , char **str , int strN , int cut , int* s
 			fprintf( stderr , "ERROR: longest common substring, posix 2\n" ) ; 
 			return ; 
 		}
-	}
+	} 
 	
 	// reconstruct work 
 	*subN = 0 ; 
@@ -100,7 +100,6 @@ void lcsPosix ( char **ref , int refN , char **str , int strN , int cut , int* s
 	for( i = 0 ; i < threads ; i++ ) 
 	{
 		*subN += N[i] ; 
-printf( "N[%i] = %i\n" , i , N[i] ) ; 
 		for( j = 0 ; j < N[i] ; j++ ) 
 		{
 			subset[k] = subset[ starts[i] + j ] ; 
