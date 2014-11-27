@@ -67,9 +67,11 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 				sHashes ( sag[i] , hashKeySize , &(dictionary[total]) , preKeySize , lastKeySize , NULL , NULL , 0 ) ; 
 				total += (lengths[i] - lcsCut + 1) * hashKeySize ;  
 			} 
-fprintf( stderr , "\rSAG: %f%%" , 100.0f*((float) i)/((float) sagN) ) ; 
+			if( verbose > 0 ) 
+				fprintf( stderr , "\rSAG: %f%%" , 100.0f*((float) i)/((float) sagN) ) ; 
 		} 
-fprintf( stderr , "\rSAG: 100.0%%        \n" ) ; 
+		if( verbose > 0 ) 
+			fprintf( stderr , "\rSAG: 100.0%%        \n" ) ; 
 		int *idx = (int*) malloc( listN * sizeof(int) ) ; 
 		for( i = 0 ; i < listN ; i++ ) 
 			idx[i] = hashKeySize * i ; 
@@ -104,15 +106,18 @@ fprintf( stderr , "\rSAG: 100.0%%        \n" ) ;
 					total++ ; 
 				} 
 			} 
-fprintf( stderr , "\rGM: %f%%" , 100.0f*((float) i)/((float) gmN) ) ; 
+			if( verbose > 0 ) 
+				fprintf( stderr , "\rGM: %f%%" , 100.0f*((float) i)/((float) gmN) ) ; 
 		} 
-fprintf( stderr , "\rGM: 100.0%%          \nExtracted subset of size %lu\n" , total ) ; 
+		if( verbose > 0 ) 
+			fprintf( stderr , "\rGM: 100.0%%          \nExtracted subset of size %lu\n" , total ) ; 
 		gmN = total ; // NOTICE UPDATE OF ESSENTIAL VARIABLE 
 		
 		// extract subset 
 		for( i = 0 ; i < total ; i++ ) 
 		{ 
 			gm[i] = gm[ gmSubSet[i] ] ; 
+			gmNames[i] = gmNames[ gmSubSet[i] ] ; 
 		} 
 		
 		free( lengths ) ; 
