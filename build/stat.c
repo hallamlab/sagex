@@ -7,9 +7,8 @@
 // Standardizes the columns of a matrix 
 void colStandardize( double *mat , int *rows , int *cols , double *out )
 {
-        int i , j ;
-        double mean ;
-        double var ;
+        int i , j ; 
+	double mean , var ; 
         for( i = 0 ; i < *cols ; i++ )
         {
                 mean = 0.0 ;
@@ -22,7 +21,7 @@ void colStandardize( double *mat , int *rows , int *cols , double *out )
                 var = var / ((double) (*rows - 1) ) ;
 
                 for( j = 0 ; j < *rows ; j++ )
-                        out[ j + *rows * i ] = (mat[ j + *rows * i ] - mean ) / sqrt(var) ;
+                        out[ j + *rows * i ] = (mat[ j + *rows * i ] - mean ) / sqrt(var) ; 
         }
 }
 

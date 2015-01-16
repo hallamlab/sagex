@@ -279,7 +279,99 @@ int sHashes ( char *s , int n , ull *hash , int preN , int lastN , ull *dict , i
 	return 0 ; 
 } 
 
+// Identifies which contigs from gm share at least cut continuous bases with at least one contig from sag 
+// sag : the sequences from the sag, length sagN 
+// gm : the sequences from the metagenome, length gmN 
+// cut : the cutoff, minimum shared bases 
+// verbose : > 0 if progress should be printed to stderr 
+// minLength : minimum contig length 
+// gmSubSet : output, pre-allocated length of gmN  
+// gmSubSetN : output, length of gmSubSet used 
+void identityFilter ( char **sag , int sagN , char **gm , int gmN , int cut , int verbose , int minLength , int *gmSubSet , size_t *gmSubSetN ) 
+{ 
+                if( verbose > 0 ) 
+                        fprintf( stderr , "Constructing kmer lookup table\n" ) ; 
+    
+                // get key information  
+                int hashKeySize , preKeySize , lastKeySize ; 
+                sHashGetKeySize ( cut , &hashKeySize , &preKeySize , &lastKeySize ) ; 
+    
+                // evaluate SAG entries for entrance into the dictionary 
+                size_t *lengths = (size_t*) malloc( sagN * sizeof(size_t) ) ; 
+                size_t tmpT ; 
+                int listN = 0 ; 
+		*gmSubSetN = 0 ; 
+		int i ; 
+                for( i = 0 ; i < sagN ; i++ ) 
+                {   
+                        tmpT = strlen( sag[i] ) ; 
+                        lengths[i] = tmpT ; 
+                        if( tmpT > minLength ) 
+                        {   
+                                *gmSubSetN += tmpT ; 
+                                listN += tmpT - cut + 1 ; 
+                        }   
+                }   
+                ull *dictionary = (ull*) malloc( hashKeySize * (*gmSubSetN) * sizeof(ull) ) ;   
+                *gmSubSetN = 0 ;   
+                for( i = 0 ; i < sagN ; i++ ) 
+                {   
+                        if( lengths[i] > minLength ) 
+                        {   
+                                // record entries 
+                                sHashes ( sag[i] , hashKeySize , &(dictionary[*gmSubSetN]) , preKeySize , lastKeySize , NULL , NULL , 0 ) ; 
+                                *gmSubSetN += (lengths[i] - cut + 1) * hashKeySize ;   
+                        }
+                        if( verbose > 0 )
+                                fprintf( stderr , "\rSAG: %f%%" , 100.0f*((float) i)/((float) sagN) ) ;
+                }
+                if( verbose > 0 )
+                        fprintf( stderr , "\rSAG: 100.0%%        \n" ) ;
+                int *idx = (int*) malloc( listN * sizeof(int) ) ;
+                for( i = 0 ; i < listN ; i++ )
+                        idx[i] = hashKeySize * i ; 
+		
+		                sHashQuickSort ( dictionary , idx , hashKeySize , listN ) ;
 
+                gmSubSet = (int*) malloc( gmN * sizeof(int) ) ;
+
+                free( lengths ) ;
+                lengths = (size_t*) malloc( gmN * sizeof(size_t) ) ;
+                int tmp = 0 ;
+                for( i = 0 ; i < gmN ; i++ )
+                {
+                        lengths[i] = strlen( gm[i] ) ;
+                        if( lengths[i] > tmp )
+                                tmp = lengths[i] ;
+                }
+                ull *hashTmp = (ull*) malloc( hashKeySize * tmp * sizeof(ull) ) ;
+
+                if( verbose > 0 )
+                        fprintf( stderr , "Performing kmer lookups\n" ) ;
+
+                *gmSubSetN = 0 ;
+                for( i = 0 ; i < gmN ; i++ )
+                {
+                        if( lengths[i] > minLength )
+                        {
+                                tmp = sHashes ( gm[i] , hashKeySize , hashTmp , preKeySize , lastKeySize , dictionary , idx , listN ) ;
+                                if( tmp > 0 )
+                                {
+                                        gmSubSet[*gmSubSetN] = i ;
+                                        *gmSubSetN += 1 ;
+                                }
+                        }
+                        if( verbose > 0 )
+                                fprintf( stderr , "\rGM: %f%%" , 100.0f*((float) i)/((float) gmN) ) ;
+                }
+                if( verbose > 0 )
+                        fprintf( stderr , "\rGM: 100.0%%          \nExtracted subset of size %lu\n" , *gmSubSetN ) ;	
+		
+		free( lengths ) ;
+                free( dictionary ) ;
+                free( idx ) ;
+                free( hashTmp ) ;
+} 
 
 
 

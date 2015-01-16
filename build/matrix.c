@@ -1096,6 +1096,7 @@ void psdEig ( double *x , int *n , double *eps , double *q , double *vals )
 		err = 1.0 + *eps ; 
 		while( err > *eps ) 
 		{
+// fprintf( stderr , "DEBUG, err: %e, eps: %e, i: %i\n" , err , *eps , i ) ; 
 			d = ( y[i-2 + *n * (i-2)] - y[i-1 + *n * (i-1)] ) / 2.0 ; 
 			if( d == 0.0 ) 
 				s = y[i-1 + *n * (i-1)] - fabs( y[ i-2 + *n * (i-1) ] ) ; 

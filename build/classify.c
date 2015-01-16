@@ -26,13 +26,15 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	int cols = 256 ; 
 	int rows = gmN + sagN ; 
 	int tmp ; 
-	int *names = NULL ; // never freed 
-	int *sagNamesIdx = NULL ; // never freed 
-	double eigenEps = eps * 0.0001 ;  
+	int *names = (int*) malloc( gmN * sizeof(int) ) ; // never freed 
+	int *sagNamesIdx = (int*) malloc( sagN * sizeof(int) ) ; // never freed 
+	double eigenEps = eps * 0.1 ;  
 	
 	int i , j ; 
 	
-	 
+	/*
+	int  *gmSubSet = NULL ; 
+	size_t total = 0 ;  
 	if( lcsCut > 0 ) 
 	{
 		if( verbose > 0 ) 
@@ -44,7 +46,6 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 		
 		// evaluate SAG entries for entrance into the dictionary 
 		size_t *lengths = (size_t*) malloc( sagN * sizeof(size_t) ) ; 
-		size_t total = 0 ; 
 		size_t tmpT ; 
 		int listN = 0 ; 
 		for( i = 0 ; i < sagN ; i++ ) 
@@ -78,7 +79,7 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 		
 		sHashQuickSort ( dictionary , idx , hashKeySize , listN ) ; 
 		
-		int *gmSubSet = (int*) malloc( gmN * sizeof(int) ) ; 
+		gmSubSet = (int*) malloc( gmN * sizeof(int) ) ; 
 		
 		free( lengths ) ; 
 		lengths = (size_t*) malloc( gmN * sizeof(size_t) ) ; 
@@ -111,65 +112,65 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 		} 
 		if( verbose > 0 ) 
 			fprintf( stderr , "\rGM: 100.0%%          \nExtracted subset of size %lu\n" , total ) ; 
-		gmN = total ; // NOTICE UPDATE OF ESSENTIAL VARIABLE 
 		
-		// extract subset 
+		// Moved to after Covariance calculation 
+		// gmN = total ; // NOTICE UPDATE OF ESSENTIAL VARIABLE 
+		// extract subset // Moved to after Covariance calculation  
 		for( i = 0 ; i < total ; i++ ) 
 		{ 
 			gm[i] = gm[ gmSubSet[i] ] ; 
 			gmNames[i] = gmNames[ gmSubSet[i] ] ; 
-		} 
+		}  
 		
 		free( lengths ) ; 
 		free( dictionary ) ; 
 		free( idx ) ; 
-		free( gmSubSet ) ; 
+		// free( gmSubSet ) ; 
 		free( hashTmp ) ; 
-	}
+	} 
+	*/ 
 	
 	if( verbose > 0 ) 
 		fprintf( stderr , "Calculating kmers for SAG\n" ) ;  
 	// Calculate kmer matrix for the SAG 
-	int *sagKmers_int = NULL ; // = (int*) malloc( cols * sagN * sizeof(int) ) ; 
+	int *sagKmers_int = NULL ;  
 	// posixCounter( sag , sagN , minLength , threads , chopSize , overlap , &sagKmers_int , &tmp , &sagNamesIdx ) ; 
-	countKmers ( sag , sagN , minLength , chopSize , overlap , threads , &sagNamesIdx , &sagKmers_int , &tmp ) ; 
-	sagN = tmp ; // NOTICE CHANGE OF sagN 
-	double *sagKmers = (double*) malloc( cols * sagN * sizeof(double) ) ; 
-	intToDoubleMat( sagKmers_int , &sagN , &cols , sagKmers ) ; 
+	int sagKmersN ; 
+	countKmers ( sag , sagN , minLength , chopSize , overlap , threads , &sagNamesIdx , &sagKmers_int , &sagKmersN ) ; 
+	
+//	// reduce sag 
+//	for( i = 0 ; i < tmp ; i++ ) // TODO don't do this, you'll destroy valuable information  
+//	{ 
+//		sag[i] = sag[ sagNamesIdx[i] ] ; 
+//		sagNames[i] = sagNames[ sagNamesIdx[i] ] ; 
+//	} 
+//	sagN = tmp ; // NOTICE CHANGE OF sagN 
+	double *sagKmers = (double*) malloc( cols * sagKmersN * sizeof(double) ) ; 
+	intToDoubleMat( sagKmers_int , &sagKmersN , &cols , sagKmers ) ;  
 	
 	if( verbose > 0 )
 		fprintf( stderr , "Calculating kmers for Metagenome\n" ) ;
 	// Calculate kmer matrix for the gm 
-	int *gmKmers_int = NULL ; // (int*) malloc( cols * gmN * sizeof(int) ) ; 
+	int *gmKmers_int = NULL ;  
 	// posixCounter( gm , gmN , minLength , threads , chopSize , overlap , &gmKmers_int , &tmp , &names ) ;  
-	countKmers ( gm , gmN , minLength , chopSize , overlap , threads , &names , &gmKmers_int , &tmp ) ;
-	gmN = tmp ; // NOTICE CHANGE OF  gmN  
-	double *gmKmers = (double*) malloc( cols * gmN * sizeof(double) ) ; 
+	int gmKmersN ; 
+	countKmers ( gm , gmN , minLength , chopSize , overlap , threads , &names , &gmKmers_int , &gmKmersN ) ; 
 	
-	rows = gmN + sagN ;  
+//	// reduce gm  
+//	for( i = 0 < tmp ; i++ ) // TODO stop, same as above  
+//	{ 
+//		gm[i] = gm[ names[i] ] ; 
+//		gmNames[i] = gmNames[ names[i] ] ; 
+//	} 
+//	gmN = tmp ; // NOTICE CHANGE OF gmN !!! 
+	double *gmKmers = (double*) malloc( cols * gmKmersN * sizeof(double) ) ; 
+	intToDoubleMat( gmKmers_int , &gmKmersN , &cols , gmKmers ) ; 
 	
-	/*
-	int k ; 
-	for( k = 0 ; k < gmN ; k++ ) 
-		printf( "%s\n" , gm[k] ) ; 
-	*/
-	
-	/* 
-	for( i = 0 ; i < sagN ; i++ ) 
-	{ 
-		for( j = 0 ; j < cols ; j++ ) 
-		{
-			// printf( "DEBUG seg, k: %i, l: %i\n" , k , l ) ; 
-			fprintf( stderr , "%i " , sagKmers_int[i + sagN * j] ) ;  
-		}
-		fprintf( stderr , "\n" ) ; 
-	}*/ 
-	
-	intToDoubleMat( gmKmers_int , &gmN , &cols , gmKmers ) ; 
+	rows = gmKmersN + sagKmersN ; 
 	
 	// Append matrices 
 	double *bigK = (double*) malloc( cols * rows * sizeof(double) ) ; 
-	appendRows ( gmKmers , sagKmers , &gmN , &sagN , &cols , bigK ) ; 
+	appendRows ( gmKmers , sagKmers , &gmKmersN , &sagKmersN , &cols , bigK ) ; 
 	
 	// convert to proportions, if requested 
         if( proportion == 1 ) 
@@ -185,25 +186,25 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
                 }   
         }
 	
-	if( kmerFreq != NULL ) // report kmers and quit 
+	if( kmerFreq != NULL ) // report kmers  
 	{
-        FILE *kmerFile;
-        kmerFile = fopen(kmerFreq, "w");
-		for( i = 0 ; i < gmN ; i++ )   
+        	FILE *kmerFile;
+        	kmerFile = fopen(kmerFreq, "w");
+		for( i = 0 ; i < gmKmersN ; i++ )   
 		{
 			fprintf(kmerFile, "%s" , gmNames[ names[i] ] ) ; 
 			for( j = 0 ; j < cols ; j++ ) 
-				fprintf(kmerFile, "\t%e" , bigK[ i + (gmN + sagN) * j ] ) ; 
+				fprintf(kmerFile, "\t%e" , bigK[ i + rows * j ] ) ; 
 			fprintf(kmerFile, "\n" ) ; 
 		}
-		for( i = 0 ; i < sagN ; i++ ) 
+		for( i = 0 ; i < sagKmersN ; i++ ) 
 		{
 			fprintf(kmerFile, "%s" , sagNames[ sagNamesIdx[i] ] ) ; 
 			for( j = 0 ; j < cols ; j++ ) 
-				fprintf(kmerFile, "\t%e" , bigK[ gmN + i + (gmN + sagN) * j ] ) ; 
+				fprintf(kmerFile, "\t%e" , bigK[ gmN + i + rows * j ] ) ; 
 			fprintf(kmerFile, "\n" ) ; 
 		}
-        fclose(kmerFile);
+	        fclose(kmerFile);
 	}
 	
 	/*
@@ -216,6 +217,8 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	
 	// standardizes dimensions 
 	double *standardK = (double*) malloc( cols * rows * sizeof(double) ) ; 
+	double *means = (double*) malloc( cols * sizeof(double) ) ; 
+	double *vars = (double*) malloc( cols * sizeof(double) ) ; 
 	colStandardize( bigK , &rows , &cols , standardK ) ; 
 	
 	/*
@@ -231,7 +234,7 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 		fprintf( stderr , "Calculating correlation matrix\n" ) ;
 	// calculate correlation matrix 
 	double *corr = (double*) malloc( cols * cols * sizeof(double) ) ; 
-	corrMat ( standardK , &rows , &cols , corr ) ; 
+	corrMat ( standardK , &gmKmersN , &cols , corr ) ; // Calculate PCA basis using GM only!  
 	
 	/*
 	for( i = 0 ; i < cols ; i++ ) 
@@ -271,9 +274,33 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	matProd ( standardK , eigVecs , &rows , &cols , &subDim , projection ) ; 
 	
 	// Extract sag and gm clusters 
-	double *sagC = (double*) malloc( sagN * subDim * sizeof(double) ) ; 
-	double *gmC = (double*) malloc( gmN * subDim * sizeof(double) ) ; 
-	deappend ( projection , &rows , &subDim , &gmN , gmC , sagC ) ; 
+	double *sagC = (double*) malloc( sagKmersN * subDim * sizeof(double) ) ; 
+	double *gmC = (double*) malloc( gmKmersN * subDim * sizeof(double) ) ; 
+	deappend ( projection , &rows , &subDim , &gmKmersN , gmC , sagC ) ; 
+	
+	// run identity filter  
+	int *idenHits = NULL ; // If indentity filter runs, this will contain the indices of all contigs which pass the identity filter 
+	size_t idenHitsN = 0 ;  
+	if( lcsCut > 0 ) 
+        {  
+                idenHits = (int*) malloc( gmN * sizeof(int) ) ; 
+                identityFilter ( sag , sagN , gm , gmN , lcsCut , verbose , minLength , idenHits , &idenHitsN ) ; 
+   		
+//                double *tmpMat = (double*) malloc( total * cols * sizeof(double) ) ; 
+//                double *tmpPtr = gmC ; 
+//                for( i = 0 ; i < total ; i++ ) 
+//                {   
+//                        gm[i] = gm[ gmSubSet[i] ] ; 
+//                        gmNames[i] = gmNames[ gmSubSet[i] ] ; 
+//    			
+//                        for( j = 0 ; j < subDim ; j++ ) 
+//                                tmpMat[ i + total * j ] = gmC[ gmSubSet[i] + gmN * j ] ;   
+//                }   
+//                gmN = total ; 
+//                gmC = tmpMat ; 
+//                free( tmpPtr ) ; 
+//                free( gmSubSet ) ; 
+        }
 	
 	/*
 	int ii , jj ; 
@@ -299,14 +326,15 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	double *tSAG = NULL ; 
 	double *p = NULL ; 
 	if( k == 1 ) 
-		covMat ( sagC , &sagN , &subDim , mu , cov ) ; 
+		covMat ( sagC , &sagKmersN , &subDim , mu , cov ) ; 
 	else
 	{ 
-		tSAG = (double*) malloc( subDim * sagN * sizeof(double) ) ; 
+		tSAG = (double*) malloc( subDim * sagKmersN * sizeof(double) ) ; 
 		p = (double*) malloc( k * sizeof(double) ) ; 
-		transpose ( sagC , &sagN , &subDim , tSAG ) ; 
-		fitMixture ( tSAG , &sagN , &subDim , &k , &eps , p , mu , cov , &maxIter , &threads ) ; 
+		transpose ( sagC , &sagKmersN , &subDim , tSAG ) ; 
+		fitMixture ( tSAG , &sagKmersN , &subDim , &k , &eps , p , mu , cov , &maxIter , &threads ) ; 
 	}
+// fprintf( stderr , "DEBUG, mu:\n" ) ; for( i = 0 ; i < subDim ; i++ ){ fprintf( stderr , "%f\n" , mu[i] ) ; } ; fprintf( stderr , "DEBUG, sig:\n" ) ; for( i=0 ; i < subDim ; i++ ){ for( j = 0 ; j < subDim ; j++ ) fprintf( stderr , "%f " , cov[ i + subDim * j ] ) ; fprintf( stderr , "\n" ) ; }
 	
 	if( verbose > 0 )
 		fprintf( stderr , "Designing cut-off\n" ) ;
@@ -330,7 +358,7 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 // fprintf( stderr , "Cut: %e\n" , cut ) ; 
 	
 	if( verbose > 0 )
-		fprintf( stderr , "Calculating square root matrix\n" ) ;
+		fprintf( stderr , "Calculating square root matrix\n" ) ; // TODO move this to the if( k < 2 ) conditional ahead  
 	// Calculate square root matrix of covariance 
 	double *sqRtMat = (double*) malloc( subDim * subDim * sizeof(double) ) ; 
 	double *covEigVecs = (double*) malloc( subDim * subDim * sizeof(double) ) ; 
@@ -348,50 +376,50 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 				diagMat[i + subDim * j] = 0.0 ; 
 		}
 	}
-	matProd ( covEigVecs , diagMat , &subDim , &subDim , &subDim , sqRtMat ) ; 
+	matProd ( covEigVecs , diagMat , &subDim , &subDim , &subDim , sqRtMat ) ; // TODO replace with something that doesn't multiply by O(n^2) zeros!   
 	
 	if( verbose > 0 )
 		fprintf( stderr , "Calculating distance statistics\n" ) ;
 	// Calculate distance statistics 
 	double *diffMat = NULL ; 
 	double *statMat = NULL ; 
-	int *status = (int*) malloc( gmN * sizeof(int) ) ; // 0 : out , 1 : in 
+	int *kmerStatus = (int*) malloc( gmKmersN * sizeof(int) ) ; // 0 : out , 1 : in  
 	if( k < 2 ) 
 	{
-		diffMat = (double*) malloc( subDim * gmN * sizeof(double) ) ; // in R^{ subDim X gmN }  
-		statMat = (double*) malloc( subDim * gmN * sizeof(double) ) ; 
-		for( i = 0 ; i < gmN ; i++ ) 
+		diffMat = (double*) malloc( subDim * gmKmersN * sizeof(double) ) ; // in R^{ subDim X gmN }  
+		statMat = (double*) malloc( subDim * gmKmersN * sizeof(double) ) ; 
+		for( i = 0 ; i < gmKmersN ; i++ ) 
 		{
 			for( j = 0 ; j < subDim ; j++ ) 
-				diffMat[ j + subDim * i ] = (gmC[ i + gmN * j ] - mu[j]) ; 
+				diffMat[ j + subDim * i ] = (gmC[ i + gmKmersN * j ] - mu[j]) ; 
 				// diffMat[ j + subDim * i ] = gmC[ i + gmN * j ] - mu[j] ; 
 		}
-		matProd ( sqRtMat , diffMat , &subDim , &subDim , &gmN , statMat ) ;   
+		matProd ( sqRtMat , diffMat , &subDim , &subDim , &gmKmersN , statMat ) ;   
 		
 		// Classify each gm sequence as IN the SAG or not 
 		double dtmp ; 
-		for( i = 0 ; i < gmN ; i++ ) 
+		for( i = 0 ; i < gmKmersN ; i++ ) 
 		{
 			dtmp = 0.0 ; 
 			for( j = 0 ; j < subDim ; j++ ) 
 				dtmp += statMat[ j + subDim * i ] * statMat[ j + subDim * i ] ; 
-			if( dtmp > cut ) 
-				status[i] = 0 ; 
+			if( dtmp > cut )  
+				kmerStatus[i] = 0 ; 
 			else
-				status[i] = 1 ;  
+				kmerStatus[i] = 1 ;  
 		}
 	}
 	else
 	{
 		int l ; 
 		double min , dtmp ; 
-		for( i = 0 ; i < gmN ; i++ ) // cycle thru metagenomic points for classification 
+		for( i = 0 ; i < gmKmersN ; i++ ) // cycle thru metagenomic points for classification 
 		{
 			for( j = 0 ; j < k ; j++ ) // cycle thru gaussians 
 			{
 				dtmp = 0.0 ; 
 				for( l = 0 ; l < subDim ; l++ ) 
-					dtmp += pow(fabs(gmC[ i + gmN * l ] - mu[ l + subDim * j ]),2.0) ; 
+					dtmp += pow(fabs(gmC[ i + gmKmersN * l ] - mu[ l + subDim * j ]),2.0) ; 
 				dtmp = sqrt(dtmp) ; 
 				if( j == 0 ) 
 					min = dtmp ; 
@@ -399,81 +427,126 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 					min = dtmp ; 
 			}
 			if( min > cut ) 
-				status[i] = 0 ; 
+				kmerStatus[i] = 0 ; 
 			else
-				status[i] = 1 ; 
+				kmerStatus[i] = 1 ; 
 		}
 	}
 	
 	if( verbose > 0 )
 		fprintf( stderr , "Classifying\n" ) ;
-	// Count proportion of chops in the SAG and compare to beta before storing in out 
-	int max = 0 ; 
-	for( i = 0 ; i < gmN ; i++ ) 
-	{
-		if( names[i] > max ) 
-			max = names[i] ; 
-	}
 	
 	int *categoryTotal = NULL ; 
 	int *categoryCount = NULL ; 
+	/* 
 	if( kmerPCA != NULL ) // only report kmer PCA  
 	{
-        FILE *pcaFile;
-        pcaFile = fopen(kmerPCA, "w");
+        	FILE *pcaFile;
+        	pcaFile = fopen(kmerPCA, "w");
 		for( i = 0 ; i < subDim ; i++ ) 
 			fprintf(pcaFile, "PC_%i\t" , i ) ; 
-		fprintf(pcaFile, "status\n" ) ; 
-		for( i = 0 ; i < gmN ; i++ ) // cycle through genome entries 
+		fprintf(pcaFile, "kmerStatus\n" ) ; 
+		for( i = 0 ; i < gmKmersN ; i++ ) // cycle through genome entries 
 		{
 			fprintf(pcaFile, "%s\t" , gmNames[ names[i] ] ) ;  
 			for( j = 0 ; j < subDim ; j++ ) 
-				fprintf(pcaFile, "%e\t" , gmC[ i + gmN * j ] ) ; 
-			fprintf(pcaFile, "%i\n" , status[i] ) ; 
+				fprintf(pcaFile, "%e\t" , gmC[ i + gmKmersN * j ] ) ; 
+			fprintf(pcaFile, "%i\n" , kmerStatus[i] ) ; 
 		}
-		for( i = 0 ; i < sagN ; i++ ) 
+		for( i = 0 ; i < sagKmersN ; i++ ) 
 		{
 			fprintf(pcaFile, "%s\t" , sagNames[ sagNamesIdx[i] ] ) ; 
 			for( j = 0 ; j < subDim ; j++ ) 
-				fprintf(pcaFile, "%e\t" , sagC[ i + sagN * j ] ) ; 
+				fprintf(pcaFile, "%e\t" , sagC[ i + sagKmersN * j ] ) ; 
 			fprintf(pcaFile, "2\n" ) ; 
 		}
-        fclose(pcaFile);
+        	fclose(pcaFile); 
 	}
-// report hits as fasta  
-//		*out = (int*) malloc( max * sizeof(int) ) ; 
-	categoryTotal = (int*) malloc( max * sizeof(int) ) ; 
-	categoryCount = (int*) malloc( max * sizeof(int) ) ; 
-	for( i = 0 ; i < max ; i++ )
+	*/
+	
+	// report hits as fasta  
+	categoryTotal = (int*) malloc( gmN * sizeof(int) ) ; 
+	categoryCount = (int*) malloc( gmN * sizeof(int) ) ; 
+	for( i = 0 ; i < gmN ; i++ )
 	{
 		categoryTotal[i] = 0 ; 
 		categoryCount[i] = 0 ; 
-	}
-	for( i = 0 ; i < gmN ; i++ ) 
-	{
+	} 
+	for( i = 0 ; i < gmKmersN ; i++ ) 
+	{ 
 		categoryTotal[ names[i] ] ++ ; 
-		if( status[i] > 0 ) 
+		if( kmerStatus[i] > 0 ) 
 			categoryCount[ names[i] ] ++ ; 
-	}
+	} 
+	
+	// reduce hit list via idenHits -- the identity filter 
+	int *hits = (int*) malloc( gmN * sizeof(int) ) ; 
+	for( i = 0 ; i < gmN ; i++ ) 
+	{ 
+		hits[i] = 0 ; 
+		if( categoryTotal[i] > 0 ) 
+		{ 
+			if( ((double) categoryCount[i] ) / ((double) categoryTotal[i] ) >= beta ) // minimum acceptable chop percentage to accept a contig is beta-% of its kmers  
+			{ 
+				// look for i in idenHits 
+				if( idenHits == NULL ) // identity filter is deactivated 
+					hits[i] = 1 ; 
+				else // identity filter is active   
+				{ 
+					// TODO use binary search 
+					for( j = 0 ; j < idenHitsN && hits[i] == 0 ; j++ ) 
+					{ 
+						if( idenHits[j] == i ) 
+							hits[i] = 1 ;  
+					}  
+		 		}  
+			} 
+		} 
+	} 
+	
+        if( kmerPCA != NULL ) // only report kmer PCA  
+        {
+                FILE *pcaFile;
+                pcaFile = fopen(kmerPCA, "w");
+                for( i = 0 ; i < subDim ; i++ ) 
+                        fprintf(pcaFile, "PC_%i\t" , i ) ; 
+                fprintf(pcaFile, "contigStatus\tkmerStatus\n" ) ; 
+                for( i = 0 ; i < gmKmersN ; i++ ) // cycle through genome entries 
+                {
+                        fprintf(pcaFile, "%s\t" , gmNames[ names[i] ] ) ;   
+                        for( j = 0 ; j < subDim ; j++ ) 
+                                fprintf(pcaFile, "%e\t" , gmC[ i + gmKmersN * j ] ) ; 
+                        fprintf(pcaFile, "%i\t%i\n" , hits[ names[i] ] , kmerStatus[i] ) ; 
+                }
+                for( i = 0 ; i < sagKmersN ; i++ ) 
+                {
+                        fprintf(pcaFile, "%s\t" , sagNames[ sagNamesIdx[i] ] ) ; 
+                        for( j = 0 ; j < subDim ; j++ ) 
+                                fprintf(pcaFile, "%e\t" , sagC[ i + sagKmersN * j ] ) ; 
+                        fprintf(pcaFile, "2\t2\n" ) ; 
+                }
+                fclose(pcaFile); 
+        }
+	
     if (output != NULL)
     {
         FILE *sagexOut;
         sagexOut = fopen(output, "w+");
-	    for( i = 0 ; i < max ; i++ ) 
-	    {
-            if( ((double) categoryCount[i] ) / ((double) categoryTotal[i] ) >= beta )// allow for 100% 
-            {
+	for( i = 0 ; i < gmN ; i++ ) 
+	{ 
+            if( hits[i] > 0 )  
+            { 
                 fprintf(sagexOut, "%s\n", gmNames[i]);
                 fprintf(sagexOut, "%s\n", gm[i]);
-            }
-        }
+            } 
+        } 
         fclose(sagexOut);
     }
     else
     {
-	    for( i = 0 ; i < max ; i++ )
-	    {
-            if( ((double) categoryCount[i] ) / ((double) categoryTotal[i] ) >= beta )// allow for 100% 
+	for( i = 0 ; i < gmN ; i++ )
+	{ 
+	    if( hits[i] > 0 ) 
             {
                 fprintf(stdout, "%s\n", gmNames[i]);
                 fprintf(stdout, "%s\n", gm[i]);
@@ -495,7 +568,10 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
             }
 */
 
-	// free unused memory  
+	// free unused memory 
+	free( hits ) ; 
+	free( means ) ; 
+	free( vars ) ; 
 	free( sagKmers_int ) ; 
 	free( gmKmers_int ) ; 
 	free( sagKmers ) ; 
@@ -514,7 +590,7 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	free( covEigVecs ) ; 
 	free( covEigVals ) ; 
 	free( diagMat ) ; 
-	free( status ) ; 
+	free( kmerStatus ) ; 
 	if( categoryTotal != NULL ) 
 		free( categoryTotal ) ; 
 	if( categoryCount != NULL ) 
