@@ -333,7 +333,7 @@ void identityFilter ( char **sag , int sagN , char **gm , int gmN , int cut , in
 		
 		                sHashQuickSort ( dictionary , idx , hashKeySize , listN ) ;
 
-                gmSubSet = (int*) malloc( gmN * sizeof(int) ) ;
+                // gmSubSet = (int*) malloc( gmN * sizeof(int) ) ; // now occurs outside of this function 
 
                 free( lengths ) ;
                 lengths = (size_t*) malloc( gmN * sizeof(size_t) ) ;
@@ -357,7 +357,7 @@ void identityFilter ( char **sag , int sagN , char **gm , int gmN , int cut , in
                                 tmp = sHashes ( gm[i] , hashKeySize , hashTmp , preKeySize , lastKeySize , dictionary , idx , listN ) ;
                                 if( tmp > 0 )
                                 {
-                                        gmSubSet[*gmSubSetN] = i ;
+                                        gmSubSet[*gmSubSetN] = i ; 
                                         *gmSubSetN += 1 ;
                                 }
                         }

@@ -325,15 +325,21 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	double *cov = (double*) malloc( subDim * subDim * k * sizeof(double) ) ; 
 	double *tSAG = NULL ; 
 	double *p = NULL ; 
+fprintf( stderr , "DEBUG 1\n" ) ; 
 	if( k == 1 ) 
 		covMat ( sagC , &sagKmersN , &subDim , mu , cov ) ; 
 	else
 	{ 
+fprintf( stderr , "DEBUG 2\n" ) ;
 		tSAG = (double*) malloc( subDim * sagKmersN * sizeof(double) ) ; 
+fprintf( stderr , "DEBUG 3\n" ) ;
 		p = (double*) malloc( k * sizeof(double) ) ; 
+fprintf( stderr , "DEBUG 4\n" ) ;
 		transpose ( sagC , &sagKmersN , &subDim , tSAG ) ; 
+fprintf( stderr , "DEBUG 5\n" ) ;
 		fitMixture ( tSAG , &sagKmersN , &subDim , &k , &eps , p , mu , cov , &maxIter , &threads ) ; 
 	}
+fprintf( stderr , "DEBUG 6\n" ) ;
 // fprintf( stderr , "DEBUG, mu:\n" ) ; for( i = 0 ; i < subDim ; i++ ){ fprintf( stderr , "%f\n" , mu[i] ) ; } ; fprintf( stderr , "DEBUG, sig:\n" ) ; for( i=0 ; i < subDim ; i++ ){ for( j = 0 ; j < subDim ; j++ ) fprintf( stderr , "%f " , cov[ i + subDim * j ] ) ; fprintf( stderr , "\n" ) ; }
 	
 	if( verbose > 0 )
@@ -342,10 +348,15 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	double cut ; 
 	if( k < 2 ) 
 	{
+fprintf( stderr , "DEBUG 7\n" ) ;
 		double cumulativeP = 1.0 - alpha ; 
+fprintf( stderr , "DEBUG 8\n" ) ;
 		double rate = 2.0 ; 
+fprintf( stderr , "DEBUG 9\n" ) ;
 		double shape = ((double) subDim ) / 2.0 ;  
+fprintf( stderr , "DEBUG 10\n" ) ;
 		dyadicInvGam ( &shape , &rate , &cumulativeP , &eps , &maxIter , &cut ) ;  
+fprintf( stderr , "DEBUG 11\n" ) ;
 	}
 	else
 	{   
@@ -353,8 +364,10 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 // fprintf( stderr , "mu:\n" ) ; for( i = 0 ; i < subDim ; i++ ){ for( j = 0 ; j < k ; j++ ) fprintf( stderr , "%e " , mu[ i + subDim * j ] ) ; fprintf( stderr , "\n" ) ; } 
 // int ll; for( ll = 0 ; ll < k ; ll++ ){ fprintf( stderr , "Cov %i:\n" , ll ) ; for( i = 0 ; i < subDim ; i++ ){ for( j = 0 ; j < subDim ; j++ ) fprintf( stderr , "%e " , cov[ i + subDim * j + subDim * subDim * ll ] ) ; fprintf( stderr , "\n" ) ; } }
 		double quantile = 1.0 - alpha ; 
+fprintf( stderr , "DEBUG 12\n" ) ;
 		getGMMQuantile ( &quantile , p , mu , cov , &maxIter , &subDim , &k , &eps , &threads , &cut ) ; 
 	}
+fprintf( stderr , "DEBUG 13\n" ) ;
 // fprintf( stderr , "Cut: %e\n" , cut ) ; 
 	
 	if( verbose > 0 )
@@ -489,7 +502,7 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 			if( ((double) categoryCount[i] ) / ((double) categoryTotal[i] ) >= beta ) // minimum acceptable chop percentage to accept a contig is beta-% of its kmers  
 			{ 
 				// look for i in idenHits 
-				if( idenHits == NULL ) // identity filter is deactivated 
+				if( lcsCut < 1 ) // identity filter is deactivated 
 					hits[i] = 1 ; 
 				else // identity filter is active   
 				{ 

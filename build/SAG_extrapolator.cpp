@@ -110,9 +110,10 @@ int main( int argc, char *argv[] ) {
     int itMax = 100000; 
     int lcsCut = -1 ; 
     int threads = 1;
+    int seed = -1 ; 
     int c, errFlag, verbose, proportionFlag, hFlag;
     errFlag = verbose = proportionFlag = hFlag = opterr = 0;
-    while ((c = getopt (argc, argv, "i:G:b:o:p:a:c:x:A:B:E:m:M:t:k:X:Y:C:hPv")) != -1) {
+    while ((c = getopt (argc, argv, "i:G:b:o:p:a:c:x:A:B:E:m:M:t:k:X:Y:C:s:hPv")) != -1) {
         switch (c) {
             case 'i':
                 input = optarg;
@@ -135,6 +136,9 @@ int main( int argc, char *argv[] ) {
             case 'o':
                 output = optarg;
                 break;
+	    case 's':
+	        seed = atoi(optarg) ; 
+		break ; 
             case 'c':
                     chopSize = atoi(optarg);
                 break;
@@ -204,7 +208,10 @@ int main( int argc, char *argv[] ) {
 	
     FastaParser Metagenome(Gm); 
     Metagenome.parse_fasta(); 
-    //cout << "Metagenome size = " << Metagenome.genome_length << endl;
+    //cout << "Metagenome size = " << Metagenome.genome_length << endl; 
+    
+    if( seed > 0 ) 
+	srand(seed) ; 
 
     FastaParser SAG(input); 
     SAG.parse_fasta(); 
