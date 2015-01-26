@@ -56,7 +56,12 @@ void countKmers ( char **fasta , int n , int minLength , int chopSize , int over
 	int *lengths = (int*) malloc( n * sizeof(int) ) ; 
 	int i ; 
 	for( i = 0 ; i < n ; i++ ) 
-		lengths[i] = strlen( fasta[i] ) ; 
+	{ 
+		if( fasta[i] != NULL ) // TODO Jerry-rigged !!! No strings should ever be null !!! 
+			lengths[i] = strlen( fasta[i] ) ; 
+		else 
+			lengths[i] = 0 ; 
+	} 
 	
 	// extract subset of sufficiently long contigs 
 	int *sub = (int*) malloc( n * sizeof(int) ) ; 
@@ -96,11 +101,13 @@ void countKmers ( char **fasta , int n , int minLength , int chopSize , int over
 	for( i = 0 ; i < workN ; i++ ) 
 		(*rowIdx)[i] = seq[i] ; 
 	
+fprintf( stderr , "DEBUG 3\n" ) ;
 	// divide tasks 
 	int *starts = (int*) malloc( threads * sizeof(int) ) ; 
 	int *ends = (int*) malloc( threads * sizeof(int) ) ; 
 	threads = divideTasks ( work , workN , chopSize , starts , ends , threads ) ; 
-	 
+	
+fprintf( stderr , "DEBUG 1\n" ) ;
 	// populate arguments 
 	struct kmerArg *karg = (struct kmerArg*) malloc( threads * sizeof(struct kmerArg) ) ; 
 	int **tmp = (int**) malloc( threads * sizeof(int*) ) ; 
@@ -119,6 +126,7 @@ void countKmers ( char **fasta , int n , int minLength , int chopSize , int over
 		karg[i].out = *out ; 
 	}
 	
+fprintf( stderr , "DEBUG 2\n" ) ;
 	// run threads 
 	pthread_t *pThreads = (pthread_t*) malloc( threads * sizeof(pthread_t) ) ; 
 	int pErr ; 

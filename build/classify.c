@@ -325,21 +325,29 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	double *cov = (double*) malloc( subDim * subDim * k * sizeof(double) ) ; 
 	double *tSAG = NULL ; 
 	double *p = NULL ; 
-fprintf( stderr , "DEBUG 1\n" ) ; 
 	if( k == 1 ) 
 		covMat ( sagC , &sagKmersN , &subDim , mu , cov ) ; 
 	else
 	{ 
-fprintf( stderr , "DEBUG 2\n" ) ;
 		tSAG = (double*) malloc( subDim * sagKmersN * sizeof(double) ) ; 
-fprintf( stderr , "DEBUG 3\n" ) ;
 		p = (double*) malloc( k * sizeof(double) ) ; 
-fprintf( stderr , "DEBUG 4\n" ) ;
 		transpose ( sagC , &sagKmersN , &subDim , tSAG ) ; 
-fprintf( stderr , "DEBUG 5\n" ) ;
 		fitMixture ( tSAG , &sagKmersN , &subDim , &k , &eps , p , mu , cov , &maxIter , &threads ) ; 
+		/*
+                p[0] = 0.6 ; p[1] = 0.4 ; 
+                
+                mu[0] = 0.4 ; mu[1] = -0.16 ; mu[2] = 0.315 ; 
+                mu[3] = 0.323 ; mu[4] = 0.72 ; mu[5] = -0.0165 ; 
+                
+                cov[0] = 0.315 ; cov[1] = -0.016 ; cov[2] = -0.24 ; 
+                cov[3] = -0.016 ; cov[4] = 0.4266 ; cov[5] = -0.04 ; 
+                cov[6] = -0.24 ; cov[7] = -0.04 ; cov[8] = 0.4104 ; 
+                
+                cov[9] = 0.165 ; cov[10] = -0.018 ; cov[11] = -0.038 ; 
+                cov[12] = -0.018 ; cov[13] = 0.027 ; cov[14] = 0.01 ; 
+                cov[15] = -0.038 ; cov[16] = 0.01 ; cov[17] = 0.05 ; 
+		*/ 
 	}
-fprintf( stderr , "DEBUG 6\n" ) ;
 // fprintf( stderr , "DEBUG, mu:\n" ) ; for( i = 0 ; i < subDim ; i++ ){ fprintf( stderr , "%f\n" , mu[i] ) ; } ; fprintf( stderr , "DEBUG, sig:\n" ) ; for( i=0 ; i < subDim ; i++ ){ for( j = 0 ; j < subDim ; j++ ) fprintf( stderr , "%f " , cov[ i + subDim * j ] ) ; fprintf( stderr , "\n" ) ; }
 	
 	if( verbose > 0 )
@@ -348,15 +356,10 @@ fprintf( stderr , "DEBUG 6\n" ) ;
 	double cut ; 
 	if( k < 2 ) 
 	{
-fprintf( stderr , "DEBUG 7\n" ) ;
 		double cumulativeP = 1.0 - alpha ; 
-fprintf( stderr , "DEBUG 8\n" ) ;
 		double rate = 2.0 ; 
-fprintf( stderr , "DEBUG 9\n" ) ;
 		double shape = ((double) subDim ) / 2.0 ;  
-fprintf( stderr , "DEBUG 10\n" ) ;
 		dyadicInvGam ( &shape , &rate , &cumulativeP , &eps , &maxIter , &cut ) ;  
-fprintf( stderr , "DEBUG 11\n" ) ;
 	}
 	else
 	{   
@@ -364,10 +367,8 @@ fprintf( stderr , "DEBUG 11\n" ) ;
 // fprintf( stderr , "mu:\n" ) ; for( i = 0 ; i < subDim ; i++ ){ for( j = 0 ; j < k ; j++ ) fprintf( stderr , "%e " , mu[ i + subDim * j ] ) ; fprintf( stderr , "\n" ) ; } 
 // int ll; for( ll = 0 ; ll < k ; ll++ ){ fprintf( stderr , "Cov %i:\n" , ll ) ; for( i = 0 ; i < subDim ; i++ ){ for( j = 0 ; j < subDim ; j++ ) fprintf( stderr , "%e " , cov[ i + subDim * j + subDim * subDim * ll ] ) ; fprintf( stderr , "\n" ) ; } }
 		double quantile = 1.0 - alpha ; 
-fprintf( stderr , "DEBUG 12\n" ) ;
 		getGMMQuantile ( &quantile , p , mu , cov , &maxIter , &subDim , &k , &eps , &threads , &cut ) ; 
 	}
-fprintf( stderr , "DEBUG 13\n" ) ;
 // fprintf( stderr , "Cut: %e\n" , cut ) ; 
 	
 	if( verbose > 0 )
@@ -398,15 +399,16 @@ fprintf( stderr , "DEBUG 13\n" ) ;
 	double *statMat = NULL ; 
 	int *kmerStatus = (int*) malloc( gmKmersN * sizeof(int) ) ; // 0 : out , 1 : in  
 	if( k < 2 ) 
-	{
-		diffMat = (double*) malloc( subDim * gmKmersN * sizeof(double) ) ; // in R^{ subDim X gmN }  
+	{ 
 		statMat = (double*) malloc( subDim * gmKmersN * sizeof(double) ) ; 
+		diffMat = (double*) malloc( subDim * gmKmersN * sizeof(double) ) ; // in R^{ subDim X gmN }  
+		
 		for( i = 0 ; i < gmKmersN ; i++ ) 
 		{
 			for( j = 0 ; j < subDim ; j++ ) 
 				diffMat[ j + subDim * i ] = (gmC[ i + gmKmersN * j ] - mu[j]) ; 
 				// diffMat[ j + subDim * i ] = gmC[ i + gmN * j ] - mu[j] ; 
-		}
+		} 
 		matProd ( sqRtMat , diffMat , &subDim , &subDim , &gmKmersN , statMat ) ;   
 		
 		// Classify each gm sequence as IN the SAG or not 

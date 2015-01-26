@@ -1025,7 +1025,6 @@ void householder ( double *x , int *rows , int *col , double *u , double *v )
 		v[i] += ttl ; 
 	} 
 }
-
 // Eigen calculator for PSD matrices 
 // x : column-major order n X n PSD matrix 
 // eps : convergence term 
@@ -1035,7 +1034,8 @@ void psdEig ( double *x , int *n , double *eps , double *q , double *vals )
 {
 	double *y = (double*) malloc( *n * *n * sizeof(double) ) ; 
 	memcpy( y , x , *n * *n * sizeof(double) ) ; 
-	int *idx = (int*) malloc( *n * sizeof(int) ) ; 
+	int *idx = (int*) malloc( (*n) * sizeof(int) ) ; 
+          
 	double *qq = NULL ; 
 	int i , j , k , l ; 
 	if( q != NULL ) 
@@ -1182,12 +1182,20 @@ void psdEig ( double *x , int *n , double *eps , double *q , double *vals )
 		}
 	}
 	
+//fprintf( stderr , "DEBUG 1 u is from %p to %p\n" , u , u + *n * sizeof(double) ) ; 
 	free( u ) ; 
+//fprintf( stderr , "DEBUG 2 v is from %p to %p\n" , v , v + *n * sizeof(double) ) ;
 	free( v ) ; 
+//fprintf( stderr , "DEBUG 3, y is from %p to %p\n" , y , y + *n * *n * sizeof(double) ) ;
 	free( y ) ; 
-	free( idx ) ; 
+//fprintf( stderr , "DEBUG 3.5 qq is from %p to %p\n" , qq , qq + *n * *n * sizeof(double) ) ;
+//fprintf( stderr , "DEBUG 4, idx ranges from %p to %p\n" , idx , idx + *n * sizeof(int) ) ; 
+//fprintf( stderr , "DEBUG 4.5 " ) ; for( i = 0 ; i < *n + 1 ; i++ ) fprintf( stderr , "%i " , idx[i] ) ; fprintf( stderr , "\n" ) ; 
+	free( idx ) ;   
+//fprintf( stderr , "DEBUG 5\n" ) ;
 	if( q != NULL ) 
 		free( qq ) ; 
+//fprintf( stderr , "DEBUG 6\n" ) ;
 }
 
 /*

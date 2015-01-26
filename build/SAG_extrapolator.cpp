@@ -107,7 +107,7 @@ int main( int argc, char *argv[] ) {
     double Beta = 0.8;
     double eps = 0.0000001;
     int itLen = 2000;
-    int itMax = 100000; 
+    int itMax = 10000; 
     int lcsCut = -1 ; 
     int threads = 1;
     int seed = -1 ; 

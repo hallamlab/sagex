@@ -13,7 +13,8 @@
 void mvdnorm ( double *x , int *d , double *mu , double* sig , double *pi , double *out , double *eps , int *threads ) 
 {
 	double dt ; 
-	det( sig , d , &dt ) ;  
+	det( sig , d , &dt ) ; 
+// fprintf( stderr , "DEBUG %e\n" , dt ) ;  
 	double *prec = (double*) malloc( *d * *d * sizeof(double) ) ; 
 	invPsd( sig , d , prec , eps , threads ) ;  
 	int i , j ; 
@@ -68,10 +69,10 @@ void pGivenX ( double *x , int *n , int *d , int *k , double *p , double *mu , d
 // out : space for a single double as output  
 // eps : convergence term 
 // threads : number of available POSIX threads 
-void eLogLik ( double *x , int *n , int *d , int *k , double *p , double *mu , double *sig , double *pi , double *out , double *eps , int *threads ) 
+void eLogLik ( double *x , int *n , int *d , int *k , double *p , double *mu , double *sig , double *pmat , double *pi , double *out , double *eps , int *threads ) 
 {
-	double *pmat = (double*) malloc( *k * *n * sizeof(double) ) ; 
-	pGivenX ( x , n , d , k , p , mu , sig , pi , pmat , eps , threads ) ; 
+	//double *pmat = (double*) malloc( *k * *n * sizeof(double) ) ; 
+	//pGivenX ( x , n , d , k , p , mu , sig , pi , pmat , eps , threads ) ; 
 	
 	int i , j ; 
 	*out = 0.0 ; 
@@ -85,7 +86,7 @@ void eLogLik ( double *x , int *n , int *d , int *k , double *p , double *mu , d
 		}
 	} 
 	
-	free( pmat ) ; 
+	//free( pmat ) ; 
 }
 
 // calculates an empirical covariance matrix 
@@ -146,7 +147,7 @@ void init ( double *x , int *n , int *d , int *k , double *p , double *eps , int
 	double *eigVals = (double*) malloc( *d * sizeof(double) ) ; 
 	double *eigVecs = (double*) malloc( *d * *d * sizeof(double) ) ; 
 	// powerIteration( sig0 , d , d , eps , eigVals , eigVecs , threads ) ; 
-	double eps2 = *eps * 0.0001 ; 
+	double eps2 = *eps * 0.1 ; 
 	psdEig ( sig0 , d , &eps2 , eigVecs , eigVals ) ; // TODO remove threads arg if no longer used 
 	double *tmpMat1 = (double*) malloc( *d * *d * sizeof(double) ) ; 
 	int i , j ; 
@@ -280,7 +281,7 @@ void nextSig ( double *x , int *n , int *d , int *k , double *pMat , double *mu 
 		}
 		
 		// calculate the estimate  
-		for( i = 0 ; i <* n ; i++ ) // sum over samples 
+		for( i = 0 ; i < (*n) ; i++ ) // sum over samples 
 		{
 			for( l = 0 ; l < *d ; l++ ) 
 			{
@@ -314,19 +315,49 @@ void fitMixture( double *x , int *n , int *d , int *k , double *eps , double *p 
 	{
 		fprintf( stderr , "ERROR: kmeans failure\n" ) ; 
 		return ; 
-	}
+	} 
 // fprintf( stderr , "DEBUG: first lik\n" ) ;
+	
+	/* 
+	if( *d == 3 ) // DEBUG 
+	{ 
+		p[0] = 0.6 ; p[1] = 0.4 ; 
+		
+		mu[0] = 0.4 ; mu[1] = -0.16 ; mu[2] = 0.315 ; 
+		mu[3] = 0.323 ; mu[4] = 0.72 ; mu[5] = -0.0165 ; 
+		
+		sig[0] = 0.315 ; sig[1] = -0.016 ; sig[2] = -0.24 ; 
+		sig[3] = -0.016 ; sig[4] = 0.4266 ; sig[5] = -0.04 ; 
+		sig[6] = -0.24 ; sig[7] = -0.04 ; sig[8] = 0.4104 ; 
+		
+		sig[9] = 0.165 ; sig[10] = -0.018 ; sig[11] = -0.038 ; 
+		sig[12] = -0.018 ; sig[13] = 0.027 ; sig[14] = 0.01 ; 
+		sig[15] = -0.038 ; sig[16] = 0.01 ; sig[17] = 0.05 ; 
+	} 
+	*/ 
 	
 	// calculate first value for log likelihood 
 	double prevLik , lik ; 
 // fprintf( stderr , "calculating first eloglik\n" ) ; 
-	eLogLik ( x , n , d , k , p , mu , sig , &pi , &prevLik , eps , threads ) ; 
+	// eLogLik ( x , n , d , k , p , mu , sig , &pi , &prevLik , eps , threads ) ; 
 	
 	// initialize variables for main loop 
 	double *tmpP = (double*) malloc( *k * sizeof(double) ) ; 
 	double *pMat = (double*) malloc( *k * *n * sizeof(double) ) ; 
-	double *tmpMu = (double*) malloc( *d * *k * sizeof(double) ) ; 
+	double *tmpMu = (double*) malloc( (*d) * (*k) * sizeof(double) ) ; 
 	double *tmpSig = (double*) malloc( *d * *d * *k * sizeof(double) ) ; 
+	
+	pGivenX ( x , n , d , k , p , mu , sig , &pi , pMat , eps , threads ) ; 
+	nextP ( pMat , n , d , k , tmpP ) ; 
+	nextMu ( x , n , d , k , pMat , tmpMu ) ; 
+	nextSig ( x , n , d , k , pMat , tmpMu , tmpSig ) ; 
+// fprintf( stderr , "DEBUG tmpMu: " ) ; for( i = 0 ; i < *d * *k ; i++ ) fprintf( stderr , "%e " , tmpMu[i] ) ; fprintf( stderr , "\n" ) ; 
+	
+	eLogLik ( x , n , d , k , tmpP , tmpMu , tmpSig , pMat , &pi , &prevLik , eps , threads ) ; 
+	
+	memcpy( p , tmpP , *k * sizeof(double) ) ; 
+	memcpy( mu , tmpMu , (*d) * (*k) * sizeof(double) ) ;  
+	memcpy( sig , tmpSig , *d * *d * *k * sizeof(double) ) ; 
 	
 // fprintf( stderr , "DEBUG: main loop\n" ) ;
 	double err = *eps + 1.0 ; 
@@ -342,29 +373,34 @@ void fitMixture( double *x , int *n , int *d , int *k , double *eps , double *p 
 		nextP ( pMat , n , d , k , tmpP ) ; 
 		nextMu ( x , n , d , k , pMat , tmpMu ) ; 
 		nextSig ( x , n , d , k , pMat , tmpMu , tmpSig ) ; 
+// fprintf( stderr , "DEBUG tmpMu: " ) ; for( i = 0 ; i < *d * *k ; i++ ) fprintf( stderr , "%e " , tmpMu[i] ) ; fprintf( stderr , "\n" ) ;
 		
-		eLogLik ( x , n , d , k , tmpP , tmpMu , tmpSig , &pi , &lik , eps , threads ) ; 
+		eLogLik ( x , n , d , k , tmpP , tmpMu , tmpSig , pMat , &pi , &lik , eps , threads ) ; 
 		if( lik == lik ) // Check for nans 
 		{
-			if( 1 > 0 ) // ( lik > prevLik ) // should be trivially true  
-			{
+			if( 1 > 0 ) // ( lik > prevLik ) // should be trivially true - but IS NOT TODO  
+			{ 
+// fprintf( stderr , "DEBUG: lik - prevLik: %e\n" , lik - prevLik ) ; 
 				// prevLik = lik ; 
 				memcpy( p , tmpP , *k * sizeof(double) ) ; 
-				memcpy( mu , tmpMu , *d * *k * sizeof(double) ) ; 
+				memcpy( mu , tmpMu , (*d) * (*k) * sizeof(double) ) ; 
 				memcpy( sig , tmpSig , *d * *d * *k * sizeof(double) ) ; 
-			}
+			} 
 			else
-			{
+			{ 
+				// fprintf( stderr , "DEBUG: lik !> prevLik, %e !> %e\n" , lik , prevLik ) ; 
 				contin = -2 ; 	
-			}
+			} 
 			err = fabs( lik - prevLik ) ; 
-// fprintf( stderr , "lik updated to %e from %e, err: %e\n" , lik , prevLik , err ) ; 
 			prevLik = lik ; 
 			if( err < *eps ) 
 				contin = 0 ; 
 		}
 		else
+		{ 
+			fprintf( stderr , "DEBUG: lik == nan\n" ) ; 
 			contin = -1 ; 
+		} 
 	}
 // fprintf( stderr , "contin: %i\n" , contin ) ; 
 	
@@ -372,6 +408,12 @@ void fitMixture( double *x , int *n , int *d , int *k , double *eps , double *p 
 	free( tmpP ) ; 
 	free( tmpMu ) ; 
 	free( tmpSig ) ; 
+	free( pMat ) ; 
+
+// fprintf( stderr , "DEBUG:\n" ) ; 
+// fprintf( stderr , "p: " ) ; for( i = 0 ; i < *k ; i++ ) fprintf( stderr , "%e " , p[i] ) ; fprintf( stderr , "\n" ) ; 
+// for( i = 0 ; i < *k ; i++ ) { fprintf( stderr , "mu %i : " , i ) ; for( j = 0 ; j < *d ; j++ ) fprintf( stderr , "%e " , mu[j + *d * i] ) ; fprintf( stderr , "\n" ) ; }  int kk ; 
+// for( kk = 0 ; kk < *k ; kk++ ){ fprintf( stderr , "sig %i:\n" , kk ) ; for( i = 0 ; i < *d ; i++ ){ for( j = 0 ; j < *d ; j++ ) fprintf( stderr , "%e " , sig[ i + *d * j + *d * *d * kk ] ) ; fprintf( stderr , "\n" ) ; } }
 }
 
 
