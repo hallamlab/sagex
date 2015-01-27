@@ -304,13 +304,18 @@ void identityFilter ( char **sag , int sagN , char **gm , int gmN , int cut , in
 		int i ; 
                 for( i = 0 ; i < sagN ; i++ ) 
                 {   
-                        tmpT = strlen( sag[i] ) ; 
-                        lengths[i] = tmpT ; 
-                        if( tmpT > minLength ) 
-                        {   
-                                *gmSubSetN += tmpT ; 
-                                listN += tmpT - cut + 1 ; 
-                        }   
+			if( sag[i] != NULL ) // TODO strings should NEVER be null !!! 
+			{ 
+                        	tmpT = strlen( sag[i] ) ; 
+                        	lengths[i] = tmpT ; 
+                        	if( tmpT > minLength ) 
+                        	{   
+                        	        *gmSubSetN += tmpT ; 
+                        	        listN += tmpT - cut + 1 ; 
+                        	} 
+			}   
+			else 
+				lengths[i] = 0 ; 
                 }   
                 ull *dictionary = (ull*) malloc( hashKeySize * (*gmSubSetN) * sizeof(ull) ) ;   
                 *gmSubSetN = 0 ;   
@@ -339,11 +344,16 @@ void identityFilter ( char **sag , int sagN , char **gm , int gmN , int cut , in
                 lengths = (size_t*) malloc( gmN * sizeof(size_t) ) ;
                 int tmp = 0 ;
                 for( i = 0 ; i < gmN ; i++ )
-                {
-                        lengths[i] = strlen( gm[i] ) ;
-                        if( lengths[i] > tmp )
-                                tmp = lengths[i] ;
-                }
+                { 
+			if( gm[i] != NULL ) // Jerry rigged robustness TODO strings should NEVER be null !!! 
+			{ 
+                        	lengths[i] = strlen( gm[i] ) ;
+                        	if( lengths[i] > tmp )
+                        	        tmp = lengths[i] ; 
+			} 
+			else 
+				lengths[i] = 0 ; 
+                } 
                 ull *hashTmp = (ull*) malloc( hashKeySize * tmp * sizeof(ull) ) ;
 
                 if( verbose > 0 )

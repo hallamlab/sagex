@@ -1090,18 +1090,21 @@ void psdEig ( double *x , int *n , double *eps , double *q , double *vals )
 	}
 	
 	// symmetric tri-diagonal qr algorithm with implicit Wilkinson shifts 
+double prevErr ; // TODO replace this with pivoting !!!  
 	double err , d , s , c , w , z , xx , yy , t ; 
-	for( i = *n ; i > 1 ; i-- ) 
+	for( i = *n-1 ; i > 0 ; i-- ) 
 	{
 		err = 1.0 + *eps ; 
-		while( err > *eps ) 
+		prevErr = 2.0 + *eps ; 
+		while( err > *eps && fabs(err - prevErr) > *eps ) 
 		{
+			prevErr = err ; 
 // fprintf( stderr , "DEBUG, err: %e, eps: %e, i: %i\n" , err , *eps , i ) ; 
-			d = ( y[i-2 + *n * (i-2)] - y[i-1 + *n * (i-1)] ) / 2.0 ; 
+			d = ( y[i-1 + *n * (i-1)] - y[i + *n * i] ) / 2.0 ; 
 			if( d == 0.0 ) 
-				s = y[i-1 + *n * (i-1)] - fabs( y[ i-2 + *n * (i-1) ] ) ; 
+				s = y[i + *n * i] - fabs( y[ i-1 + *n * i ] ) ; 
 			else
-				s = y[i-1 + *n * (i-1)] - y[ i-2 + *n * (i-1) ] * y[ i-2 + *n * (i-1) ] / ( d + copysign( sqrt( d*d + y[ i-2 + *n * (i-1) ] * y[ i-2 + *n * (i-1) ] ) , d ) ) ; 
+				s = y[i + *n * i] - y[ i-1 + *n * i ] * y[ i-1 + *n * i ] / ( d + copysign( sqrt( d*d + y[ i-1 + *n * i ] * y[ i-1 + *n * i ] ) , d ) ) ; 
 			xx = y[0] - s ; 
 			yy = y[ *n ] ; 
 			for( j = 0 ; j < i-1 ; j++ ) 
@@ -1128,10 +1131,13 @@ void psdEig ( double *x , int *n , double *eps , double *q , double *vals )
 					y[ j + *n * (j-1) ] = w ; 
 				}
 				if( j < i-1 ) 
-				{
-					yy = -s * y[ j+1 + *n * (j+2) ] ; 
+				{ 
+					yy = -s * y[ j+1 + *n * (j+2) ] ;   
 					y[ j+1 + *n * (j+2) ] = c * y[ j+1 + *n * (j+2) ] ; 
-					y[ j+2 + *n * (j+1) ] = y[ j+1 + *n * (j+2) ] ; 
+					y[ j+2 + *n * (j+1) ] = y[ j+1 + *n *(j+2) ] ;  
+					// yy = -s * y[ j+1 + *n * (j+2) ] ; 
+					// y[ j+1 + *n * (j+2) ] = c * y[ j+1 + *n * (j+2) ] ; 
+					// y[ j+2 + *n * (j+1) ] = y[ j+1 + *n * (j+2) ] ; 
 				} 
 				
 				// update vectors 
@@ -1153,7 +1159,8 @@ void psdEig ( double *x , int *n , double *eps , double *q , double *vals )
 				// err = abs( y[ i-2 + *n * (i-1) ] ) / ( abs( y[ i-2 + *n * (i-2) ] ) + abs( y[ i-1 + *n * (i-1) ] ) ) ; 
 			}
 			// calculate convergence errors 
-			err = fabs( y[ i-2 + *n * (i-1) ] ) / ( fabs( y[ i-2 + *n * (i-2) ] ) + fabs( y[ i-1 + *n * (i-1) ] ) ) ; 
+			err = fabs( y[ i-1 + *n * i ] ) / ( fabs( y[ i-1 + *n * (i-1) ] ) + fabs( y[ i + *n * i ] ) ) ; 
+// fprintf( stderr , "DEBUG: err: %e, i: %i\n" , err , i ) ; 
 		}
 	}
 	
@@ -1181,21 +1188,14 @@ void psdEig ( double *x , int *n , double *eps , double *q , double *vals )
 				q[ j + *n * (*n - i - 1) ] = qq[ j + *n * idx[i] ] ; 
 		}
 	}
+// fprintf( stderr , "DEBUG:" ) ; for( i = 0 ; i < *n ; i++ ) fprintf( stderr , " %e" , vals[i] ) ; fprintf( stderr , "\n" ) ; 
 	
-//fprintf( stderr , "DEBUG 1 u is from %p to %p\n" , u , u + *n * sizeof(double) ) ; 
 	free( u ) ; 
-//fprintf( stderr , "DEBUG 2 v is from %p to %p\n" , v , v + *n * sizeof(double) ) ;
 	free( v ) ; 
-//fprintf( stderr , "DEBUG 3, y is from %p to %p\n" , y , y + *n * *n * sizeof(double) ) ;
 	free( y ) ; 
-//fprintf( stderr , "DEBUG 3.5 qq is from %p to %p\n" , qq , qq + *n * *n * sizeof(double) ) ;
-//fprintf( stderr , "DEBUG 4, idx ranges from %p to %p\n" , idx , idx + *n * sizeof(int) ) ; 
-//fprintf( stderr , "DEBUG 4.5 " ) ; for( i = 0 ; i < *n + 1 ; i++ ) fprintf( stderr , "%i " , idx[i] ) ; fprintf( stderr , "\n" ) ; 
 	free( idx ) ;   
-//fprintf( stderr , "DEBUG 5\n" ) ;
 	if( q != NULL ) 
 		free( qq ) ; 
-//fprintf( stderr , "DEBUG 6\n" ) ;
 }
 
 /*

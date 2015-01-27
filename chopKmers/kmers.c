@@ -101,13 +101,11 @@ void countKmers ( char **fasta , int n , int minLength , int chopSize , int over
 	for( i = 0 ; i < workN ; i++ ) 
 		(*rowIdx)[i] = seq[i] ; 
 	
-fprintf( stderr , "DEBUG 3\n" ) ;
 	// divide tasks 
 	int *starts = (int*) malloc( threads * sizeof(int) ) ; 
 	int *ends = (int*) malloc( threads * sizeof(int) ) ; 
 	threads = divideTasks ( work , workN , chopSize , starts , ends , threads ) ; 
 	
-fprintf( stderr , "DEBUG 1\n" ) ;
 	// populate arguments 
 	struct kmerArg *karg = (struct kmerArg*) malloc( threads * sizeof(struct kmerArg) ) ; 
 	int **tmp = (int**) malloc( threads * sizeof(int*) ) ; 
@@ -126,7 +124,6 @@ fprintf( stderr , "DEBUG 1\n" ) ;
 		karg[i].out = *out ; 
 	}
 	
-fprintf( stderr , "DEBUG 2\n" ) ;
 	// run threads 
 	pthread_t *pThreads = (pthread_t*) malloc( threads * sizeof(pthread_t) ) ; 
 	int pErr ; 
