@@ -318,6 +318,16 @@ void fitMixture( double *x , int *n , int *d , int *k , double *eps , double *p 
 	} 
 // fprintf( stderr , "DEBUG: first lik\n" ) ;
 	
+	double determinant ; 
+	double smallestDeterminant = 1 ; 
+	for( i = 0 ; i < *k ; i++ ) 
+	{ 
+		det( &sig[ *d * *d * i ] , d , &determinant ) ; 
+		if( determinant < smallestDeterminant ) 
+			smallestDeterminant = determinant ; 
+	}
+	if( smallestDeterminant < *eps ) 
+		fprintf( stderr , "WARNING: Covariance numerically singular (determinant = %e). Reduce argument -k\n" , smallestDeterminant ) ; 
 	/* 
 	if( *d == 3 ) // DEBUG 
 	{ 
@@ -378,9 +388,9 @@ void fitMixture( double *x , int *n , int *d , int *k , double *eps , double *p 
 		eLogLik ( x , n , d , k , tmpP , tmpMu , tmpSig , pMat , &pi , &lik , eps , threads ) ; 
 		if( lik == lik ) // Check for nans 
 		{
-			if( 1 > 0 ) // ( lik > prevLik ) // should be trivially true - but IS NOT TODO  
+			if( lik > prevLik )   
 			{ 
-// fprintf( stderr , "DEBUG: lik - prevLik: %e\n" , lik - prevLik ) ; 
+fprintf( stderr , "DEBUG: lik - prevLik: %e\n" , lik - prevLik ) ; 
 				// prevLik = lik ; 
 				memcpy( p , tmpP , *k * sizeof(double) ) ; 
 				memcpy( mu , tmpMu , (*d) * (*k) * sizeof(double) ) ; 
