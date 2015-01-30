@@ -431,7 +431,7 @@ int fitMixture( double *x , int *n , int *d , int *k , double *eps , double *p ,
 		}
 		else
 		{ 
-			fprintf( stderr , "DEBUG: lik == nan\n" ) ; 
+			// fprintf( stderr , "DEBUG: lik == nan\n" ) ; 
 			contin = -1 ; 
 		} 
 	}

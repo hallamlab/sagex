@@ -333,8 +333,6 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 			{ 
 				while( k > 1 && err < 0 ) 
 				{ 
-					if( verbose > 0 ) 
-						fprintf( stderr , "WARNING: Gaussian Mixture Model cannot fit with -k of %i, decrementing -k\n" , k ) ; 
 					k-- ; 
 					if( k > 1 ) 
 					{ 
@@ -345,6 +343,8 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 						} 
 					} 
 				} 
+				if( verbose > 0 ) 
+					fprintf( stderr , "WARNING: Argument -k reduced to %i\n" , k ) ; 
 			} 
 		} 
 	} 
