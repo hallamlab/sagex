@@ -25,10 +25,11 @@
 // chopsSize : 
 // overlap : 
 // k : number of gaussians in the gaussian mixture model modelling the SAG 
+// fixK : For certain values of k the gaussian mixture model will fail to fit. If fixK > 0 , classify will fail when this occurs. Otherwise, it can lower k 
 // verbose : describe process in stderr if > 0 
 // kmerFreq : writes kmers to file specified 
 // out : a pointer to be allocated with the int-names of contigs which have been classified as IN the SAG 
-void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minLength , int maxIter , int chopSize , int overlap , int proportion, int k , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output , int lcsCut ) ; 
+void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minLength , int maxIter , int chopSize , int overlap , int proportion, int k , int fixK , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output , int lcsCut ) ; 
 
 // Standardizes the columns of a matrix 
 void colStandardize( double *mat , int *rows , int *cols , double *out ) ; 

@@ -111,9 +111,10 @@ int main( int argc, char *argv[] ) {
     int lcsCut = -1 ; 
     int threads = 1;
     int seed = -1 ; 
+    int K = -1 ; 
     int c, errFlag, verbose, proportionFlag, hFlag;
     errFlag = verbose = proportionFlag = hFlag = opterr = 0;
-    while ((c = getopt (argc, argv, "i:G:b:o:p:a:c:x:A:B:E:m:M:t:k:X:Y:C:s:hPv")) != -1) {
+    while ((c = getopt (argc, argv, "i:G:b:o:p:a:c:x:A:B:E:m:M:t:k:X:Y:C:s:hPvK")) != -1) {
         switch (c) {
             case 'i':
                 input = optarg;
@@ -124,6 +125,9 @@ int main( int argc, char *argv[] ) {
             case 'b':
                 blastout = optarg;
                 break;
+	    case 'K':
+		K = 1; 
+		break; 
             case 'p':
                 pID = atoi(optarg);
                 break;
@@ -256,7 +260,7 @@ printf( "DEBUG chopping SAG...\n" ) ;
 	else
 		hitPtr = &hits ;
 
-    classify ( SAG.sequence , SAG.N_contigs , SAG.header , metBag.sequence , metBag.N_contigs , metBag.header , Alpha , Beta , threads , eps , itLen , itMax , chopSize , overlap , proportionFlag , k , verbose , kmerFreq , kmerPCA , hitPtr , output , lcsCut );
+    classify ( SAG.sequence , SAG.N_contigs , SAG.header , metBag.sequence , metBag.N_contigs , metBag.header , Alpha , Beta , threads , eps , itLen , itMax , chopSize , overlap , proportionFlag , k , K , verbose , kmerFreq , kmerPCA , hitPtr , output , lcsCut );
 	 
 	return 0 ; 
 }

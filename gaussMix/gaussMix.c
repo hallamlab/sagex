@@ -293,25 +293,64 @@ void nextSig ( double *x , int *n , int *d , int *k , double *pMat , double *mu 
 	free( tmpMat ) ; 
 }
 
-void fitMixture( double *x , int *n , int *d , int *k , double *eps , double *p , double *mu , double *sig , int *maxIter , int* threads ) 
+// attempts to initialize a gaussian mixture model estimation proceedure for a fixed value of k 
+// returns -1 if failed, 0 if successful  
+int gmmInit ( double *x , int *n , int *d , int *k , double *p , double *eps , int* threads ,  double *mu , double *sig , int* maxIter ) 
+{ 
+	double pi = atan(1.0) * 4.0 ; 
+	int fails = 1 ; 
+	int i , j ; 
+	double determinant , smallestDeterminant ; 
+	for( i = 0 ; i < *maxIter && fails > 0 ; i++ ) // reattempt initialization  
+	{ 
+		init ( x , n , d , k , p , eps , threads , &pi , mu , sig , maxIter ) ; 
+		fails = 0 ; 
+		smallestDeterminant = 1.0 ; 
+		for( j = 0 ; j < *k ; j++ ) 
+		{ 
+			if( p[j] < *eps ) 
+				fails++ ; // kmeans failure 
+			det( &sig[ *d * *d * i ] , d , &determinant ) ; 
+			if( determinant < smallestDeterminant ) 
+				smallestDeterminant = determinant ; 
+		} 
+		if( smallestDeterminant < *eps ) 
+			fails++ ; // kmeans failure 
+	} 
+	if( fails > 0 ) 
+		return -1 ; 
+	else 
+		return 0 ; 
+} 
+
+// returns -1 if failed, 0 if successful 
+int fitMixture( double *x , int *n , int *d , int *k , double *eps , double *p , double *mu , double *sig , int *maxIter , int* threads ) 
 {
 	double pi = atan(1.0) * 4.0 ; 
 	
+	/*
 // fprintf( stderr , "DEBUG: initializing\n" ) ; 
 	// initialize parameters 
-	int zeros = 1 ; 
+	int fails = 1 ; 
 	int i , j ;  
-	for( i = 0 ; i < *maxIter && zeros > 0 ; i++ ) 
+	double determinant , smallestDeterminant ; 
+	for( i = 0 ; i < *maxIter && fails > 0 ; i++ ) // retry initialization  
 	{
 		init ( x , n , d , k , p , eps , threads , &pi , mu , sig , maxIter ) ; 
 		zeros = 0 ; 
+		smallestDeterminant = 1 ; 
 		for( j = 0 ; j < *k ; j++ ) 
 		{
 			if( p[j] < *eps ) 
-				zeros++ ; // kmeans failure 
+				fails++ ; // kmeans failure 
+			det( &sig[ *d * *d * i ] , d , &determinant ) ; 
+			if( determinant < smallestDeterminant ) 
+				smallestDeterminant = determinant ; 
 		}
+		if( smallestDeterminant < *eps ) 
+			fails++ ; // kmeans failure 
 	}
-	if( zeros > 0 ) 
+	if( fails > 0 ) 
 	{
 		fprintf( stderr , "ERROR: kmeans failure\n" ) ; 
 		return ; 
@@ -328,23 +367,7 @@ void fitMixture( double *x , int *n , int *d , int *k , double *eps , double *p 
 	}
 	if( smallestDeterminant < *eps ) 
 		fprintf( stderr , "WARNING: Covariance numerically singular (determinant = %e). Reduce argument -k\n" , smallestDeterminant ) ; 
-	/* 
-	if( *d == 3 ) // DEBUG 
-	{ 
-		p[0] = 0.6 ; p[1] = 0.4 ; 
-		
-		mu[0] = 0.4 ; mu[1] = -0.16 ; mu[2] = 0.315 ; 
-		mu[3] = 0.323 ; mu[4] = 0.72 ; mu[5] = -0.0165 ; 
-		
-		sig[0] = 0.315 ; sig[1] = -0.016 ; sig[2] = -0.24 ; 
-		sig[3] = -0.016 ; sig[4] = 0.4266 ; sig[5] = -0.04 ; 
-		sig[6] = -0.24 ; sig[7] = -0.04 ; sig[8] = 0.4104 ; 
-		
-		sig[9] = 0.165 ; sig[10] = -0.018 ; sig[11] = -0.038 ; 
-		sig[12] = -0.018 ; sig[13] = 0.027 ; sig[14] = 0.01 ; 
-		sig[15] = -0.038 ; sig[16] = 0.01 ; sig[17] = 0.05 ; 
-	} 
-	*/ 
+	*/
 	
 	// calculate first value for log likelihood 
 	double prevLik , lik ; 
@@ -388,7 +411,7 @@ void fitMixture( double *x , int *n , int *d , int *k , double *eps , double *p 
 		eLogLik ( x , n , d , k , tmpP , tmpMu , tmpSig , pMat , &pi , &lik , eps , threads ) ; 
 		if( lik == lik ) // Check for nans 
 		{
-			if( lik > prevLik )   
+			if( 1 > 0 ) // ( lik > prevLik ) TODO   
 			{ 
 // fprintf( stderr , "DEBUG: lik - prevLik: %e\n" , lik - prevLik ) ; 
 				// prevLik = lik ; 
@@ -398,7 +421,7 @@ void fitMixture( double *x , int *n , int *d , int *k , double *eps , double *p 
 			} 
 			else
 			{ 
-				// fprintf( stderr , "DEBUG: lik !> prevLik, %e !> %e\n" , lik , prevLik ) ; 
+				fprintf( stderr , "DEBUG: lik !> prevLik, %e !> %e on iter %i\n" , lik , prevLik , iter ) ; 
 				contin = -2 ; 	
 			} 
 			err = fabs( lik - prevLik ) ; 
@@ -419,6 +442,11 @@ void fitMixture( double *x , int *n , int *d , int *k , double *eps , double *p 
 	free( tmpMu ) ; 
 	free( tmpSig ) ; 
 	free( pMat ) ; 
+	
+	if( contin < 0 ) 
+		return -1 ; 
+	else 
+		return 0 ; 
 
 // fprintf( stderr , "DEBUG:\n" ) ; 
 // fprintf( stderr , "p: " ) ; for( i = 0 ; i < *k ; i++ ) fprintf( stderr , "%e " , p[i] ) ; fprintf( stderr , "\n" ) ; 

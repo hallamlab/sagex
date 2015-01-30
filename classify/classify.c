@@ -20,7 +20,7 @@
 // verbose : describe process in stderr if > 0 
 // kmerFreq : writes kmers to file specified 
 // out : a pointer to be allocated with the int-names of contigs which have been classified as IN the SAG 
-void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minLength , int maxIter , int chopSize , int overlap , int proportion, int k , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output , int lcsCut ) 
+void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minLength , int maxIter , int chopSize , int overlap , int proportion, int k , int fixK , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output , int lcsCut ) 
 {
 	int subDim = 3 ; 
 	int cols = 256 ; 
@@ -285,21 +285,6 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
         {  
                 idenHits = (int*) malloc( gmN * sizeof(int) ) ; 
                 identityFilter ( sag , sagN , gm , gmN , lcsCut , verbose , minLength , idenHits , &idenHitsN ) ; 
-   		
-//                double *tmpMat = (double*) malloc( total * cols * sizeof(double) ) ; 
-//                double *tmpPtr = gmC ; 
-//                for( i = 0 ; i < total ; i++ ) 
-//                {   
-//                        gm[i] = gm[ gmSubSet[i] ] ; 
-//                        gmNames[i] = gmNames[ gmSubSet[i] ] ; 
-//    			
-//                        for( j = 0 ; j < subDim ; j++ ) 
-//                                tmpMat[ i + total * j ] = gmC[ gmSubSet[i] + gmN * j ] ;   
-//                }   
-//                gmN = total ; 
-//                gmC = tmpMat ; 
-//                free( tmpPtr ) ; 
-//                free( gmSubSet ) ; 
         }
 	
 	/*
@@ -325,14 +310,53 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	double *cov = (double*) malloc( subDim * subDim * k * sizeof(double) ) ; 
 	double *tSAG = NULL ; 
 	double *p = NULL ; 
+	
+	if( k > 1 ) // attempt to fit GMM  
+	{ 
+		tSAG = (double*) malloc( subDim * sagKmersN * sizeof(double) ) ;
+		p = (double*) malloc( k * sizeof(double) ) ; 
+		transpose ( sagC , &sagKmersN , &subDim , tSAG ) ; 
+		int err = gmmInit ( tSAG , &sagKmersN , &subDim , &k , p , &eps , &threads ,  mu , cov , &maxIter ) ; 
+		if( err >= 0 ) 
+		{ 
+			err = fitMixture ( tSAG , &sagKmersN , &subDim , &k , &eps , p , mu , cov , &maxIter , &threads ) ; 
+		} 
+		if( err < 0 ) // error! 
+		{ 
+			if( fixK > 0 ) // cannot change k ! Abort ! 
+			{ 
+				if( verbose > 0 ) 
+					fprintf( stderr , "ERROR: Gaussian Mixture Model failed to fit! Consider reducing -k or deactivating -K\n" ) ; 
+				return ; 
+			} 
+			else 
+			{ 
+				while( k > 1 && err < 0 ) 
+				{ 
+					if( verbose > 0 ) 
+						fprintf( stderr , "WARNING: Gaussian Mixture Model cannot fit with -k of %i, decrementing -k\n" , k ) ; 
+					k-- ; 
+					if( k > 1 ) 
+					{ 
+						err = gmmInit ( tSAG , &sagKmersN , &subDim , &k , p , &eps , &threads ,  mu , cov , &maxIter ) ; 
+						if( err >= 0 ) 
+						{ 
+							err = fitMixture ( tSAG , &sagKmersN , &subDim , &k , &eps , p , mu , cov , &maxIter , &threads ) ; 
+						} 
+					} 
+				} 
+			} 
+		} 
+	} 
+	
 	if( k == 1 ) 
 		covMat ( sagC , &sagKmersN , &subDim , mu , cov ) ; 
 	else
 	{ 
-		tSAG = (double*) malloc( subDim * sagKmersN * sizeof(double) ) ; 
-		p = (double*) malloc( k * sizeof(double) ) ; 
-		transpose ( sagC , &sagKmersN , &subDim , tSAG ) ; 
-		fitMixture ( tSAG , &sagKmersN , &subDim , &k , &eps , p , mu , cov , &maxIter , &threads ) ; 
+		// tSAG = (double*) malloc( subDim * sagKmersN * sizeof(double) ) ; 
+		// p = (double*) malloc( k * sizeof(double) ) ; 
+		// transpose ( sagC , &sagKmersN , &subDim , tSAG ) ; 
+		// fitMixture ( tSAG , &sagKmersN , &subDim , &k , &eps , p , mu , cov , &maxIter , &threads ) ; 
 		/*
                 p[0] = 0.6 ; p[1] = 0.4 ; 
                 
