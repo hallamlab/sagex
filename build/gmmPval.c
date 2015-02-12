@@ -1,6 +1,52 @@
 
 #include "gmmPval.h"
 
+// mu : dim - vector  
+// invSqrtSig : dim X dim vector 
+double calcSingleStat ( double *x , int *dim , double *mu , double *invSqrtSig ) 
+{ 
+	double *tmpVec1 = (double*) malloc( *dim * sizeof(double) ) ; // TODO move malloc out of loops 
+	double *tmpVec2 = (double*) malloc( *dim * sizeof(double) ) ; 
+	int i ; 
+	for( i = 0 ; i < *dim ; i++ ) 
+		tmpVec1[i] = x[i] - mu[i] ; 
+	
+	int j ; 
+	for( i = 0 ; i < *dim ; i++ ) 
+	{ 
+		tmpVec2[i] = 0.0 ; 
+		for( j = 0 ; j < *dim ; j++ ) 
+			tmpVec2[i] += tmpVec1[j] * invSqrtSig[ j + *dim * i ] ; 
+	} 
+	
+	double out = 0.0 ; 
+	for( i = 0 ; i < *dim ; i++ ) 
+		out += tmpVec2[i] * tmpVec2[i] ; 
+	
+	free( tmpVec1 ) ; 
+	free( tmpVec2 ) ; 
+	
+	return out ; 
+} 
+
+// Calculates the minimum Malahanobis distance from x to a centroid  
+// k : number of gaussians 
+// mu : dim X k 
+// invSqrtSig : dim X dim X k matrix of inverse square-root matrices  
+double calcStat ( double *x , int *k , int *dim , double *mu , double *invSqrtSig ) 
+{ 
+	double out = calcSingleStat ( x , dim , mu , invSqrtSig ) ; 
+	double tmp ; 
+	int i ; 
+	for( i = 1 ; i < *k ; i++ ) 
+	{ 
+		tmp = calcSingleStat ( x , dim , &mu[ *dim * i ] , &invSqrtSig[ *dim * *dim * i ] ) ; 
+		if( tmp < out ) 
+			out = tmp ; 
+	} 
+	return out ; 
+} 
+
 // generate univariate normals 
 // pi : 3.14159... etc 
 // out : space for two doubles  
@@ -162,11 +208,26 @@ void getGMMQuantile ( double *q , double *p , double *mu , double *sig , int *n 
 	double *stats = (double*) malloc( *n * sizeof(double) ) ; 
 	simulateGMM ( n , d , k , p , mu , sig , eps , threads , sims ) ; 
 	
-	// calculate minimum distances  
+	// calculate inverse square root matrices 
 	int i , j , l ; 
+	double *invSqrtSig = (double*) malloc( *d * *d * *k * sizeof(double) ) ; // todo : free this  
+	double *tmpMat = (double*) malloc( *d * *d * sizeof(double) ) ; // todo : free this 
+	double *tmpVec = (double*) malloc( *d * sizeof(double) ) ; // todo : free this 
+	for( i = 0 ; i < *k ; i++ ) 
+	{ 
+		psdEig ( &sig[ *d * *d * i ] , d , eps , tmpMat , tmpVec ) ; 
+		for( j = 0 ; j < *d ; j++ ) 
+		{ 
+			for( l = 0 ; l < *d ; l++ ) 
+				invSqrtSig[ j + *d * l + *d * *d * i ] = tmpMat[ j + *d * l ] / sqrt(tmpVec[l]) ; 
+		} 
+	} 
+	
+	// calculate minimum distances  
 	double dist, min ; 
 	for( i = 0 ; i < *n ; i++ ) 
-	{
+	{ 
+		/* 
 		for( j = 0 ; j < *k ; j++ ) 
 		{
 			dist = 0.0 ; 
@@ -182,6 +243,8 @@ void getGMMQuantile ( double *q , double *p , double *mu , double *sig , int *n 
 			}
 		}
 		stats[i] = min ; 
+		*/ 
+		stats[i] = calcStat ( &sims[ *d * i ] , k , d , mu , invSqrtSig ) ; 
 	}
 	
 	// sort 
@@ -195,6 +258,9 @@ void getGMMQuantile ( double *q , double *p , double *mu , double *sig , int *n 
 	
 	free( sims ) ; 
 	free( stats ) ; 
+	free( invSqrtSig ) ; 
+	free( tmpMat ) ; 
+	free( tmpVec ) ; 
 }
 
 

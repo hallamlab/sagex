@@ -2,6 +2,12 @@
 #include <math.h> 
 #include "matrix.h" 
 
+// Calculates the minimum Malahanobis distance from x to a centroid  
+// k : number of gaussians 
+// mu : dim X k 
+// invSqrtSig : dim X dim X k matrix of inverse square-root matrices  
+double calcStat ( double *x , int *k , int *dim , double *mu , double *invSqrtSig ) ; 
+
 // parametric bootstrap calculating quantiles of minimum distance from the means 
 // q : quantile value desired 
 // n : bootsrap count 

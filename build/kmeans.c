@@ -7,7 +7,7 @@ void initKMeans ( double *x , int *d , int *n , int *k , double *mu )
 	int *idx = (int*) malloc( *k * sizeof(int) ) ; 
 	double *dList = (double*) malloc( *n * sizeof(double) ) ; 
 	
-	idx[0] = rand() % *k ; 
+	idx[0] = rand() % *n ; 
 	
 	double tmp , total , r ; 
 	int i , j , l , h , flag ; 
@@ -37,7 +37,10 @@ void initKMeans ( double *x , int *d , int *n , int *k , double *mu )
 				{
 					tmp = 0.0 ; 
 					for( h = 0 ; h < *d ; h++ ) 
+					{ 
+// fprintf( stderr , "h: %i, d: %i , i: %i, j: %i, l: %i, idx[l]: %i\n" , h , *d, i, j , l , idx[l] ) ; 
 						tmp += pow( fabs( x[ h + *d * j] - x[ h + *d * idx[l] ] ) , 2.0 ) ; 
+					} 
 					if( tmp < dList[j] ) 
 						dList[j] = tmp ; 
 				}
@@ -52,8 +55,8 @@ void initKMeans ( double *x , int *d , int *n , int *k , double *mu )
 		tmp = 0.0 ; 
 		for( j = 0 ; j < *n && idx[i] < 0 ; j++ ) 
 		{
-			tmp += dList[j] ; 
-			if( r < tmp / total ) 
+			tmp += dList[j] * dList[j] ; 
+			if( r <= tmp / total ) 
 				idx[i] = j ; 
 		} 
 	}

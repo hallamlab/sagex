@@ -105,7 +105,8 @@ int main( int argc, char *argv[] ) {
     int overlap = 500;
     double Alpha = 0.05;
     double Beta = 0.8;
-    double eps = 0.0000001;
+    double eps = 0.0000001; 
+    double D = 1.0 ; // malahanobis multiple  
     int itLen = 2000;
     int itMax = 10000; 
     int lcsCut = -1 ; 
@@ -114,7 +115,7 @@ int main( int argc, char *argv[] ) {
     int K = -1 ; 
     int c, errFlag, verbose, proportionFlag, hFlag;
     errFlag = verbose = proportionFlag = hFlag = opterr = 0;
-    while ((c = getopt (argc, argv, "i:G:b:o:p:a:c:x:A:B:E:m:M:t:k:X:Y:C:s:hPvK")) != -1) {
+    while ((c = getopt (argc, argv, "i:G:b:o:p:a:c:x:A:B:E:m:M:t:k:X:Y:C:D:s:hPvK")) != -1) {
         switch (c) {
             case 'i':
                 input = optarg;
@@ -125,6 +126,9 @@ int main( int argc, char *argv[] ) {
             case 'b':
                 blastout = optarg;
                 break;
+	    case 'D': 
+		D = atof(optarg) ; 
+		break; 
 	    case 'K':
 		K = 1; 
 		break; 
@@ -260,7 +264,7 @@ printf( "DEBUG chopping SAG...\n" ) ;
 	else
 		hitPtr = &hits ;
 
-    classify ( SAG.sequence , SAG.N_contigs , SAG.header , metBag.sequence , metBag.N_contigs , metBag.header , Alpha , Beta , threads , eps , itLen , itMax , chopSize , overlap , proportionFlag , k , K , verbose , kmerFreq , kmerPCA , hitPtr , output , lcsCut );
+    classify ( SAG.sequence , SAG.N_contigs , SAG.header , metBag.sequence , metBag.N_contigs , metBag.header , Alpha , Beta , threads , eps , itLen , itMax , chopSize , overlap , proportionFlag , k , K , D , verbose , kmerFreq , kmerPCA , hitPtr , output , lcsCut );
 	 
 	return 0 ; 
 }

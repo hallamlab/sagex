@@ -20,7 +20,7 @@
 // verbose : describe process in stderr if > 0 
 // kmerFreq : writes kmers to file specified 
 // out : a pointer to be allocated with the int-names of contigs which have been classified as IN the SAG 
-void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minLength , int maxIter , int chopSize , int overlap , int proportion, int k , int fixK , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output , int lcsCut ) 
+void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minLength , int maxIter , int chopSize , int overlap , int proportion, int k , int fixK , double malahanobisMultiple , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output , int lcsCut ) 
 {
 	int subDim = 3 ; 
 	int cols = 256 ; 
@@ -442,18 +442,33 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 			dtmp = 0.0 ; 
 			for( j = 0 ; j < subDim ; j++ ) 
 				dtmp += statMat[ j + subDim * i ] * statMat[ j + subDim * i ] ; 
-			if( dtmp > cut )  
+			if( dtmp > malahanobisMultiple*cut )  
 				kmerStatus[i] = 0 ; 
 			else
 				kmerStatus[i] = 1 ;  
 		}
 	}
 	else
-	{
+	{ 
 		int l ; 
+		double *invSqrtSig = (double*) malloc( subDim * subDim * k * sizeof(double)  ) ; 
+		double *tmpEigMat = (double*) malloc( subDim * subDim * sizeof(double) ) ; 
+		double *tmpEigVec = (double*) malloc( subDim * sizeof(double) ) ; 
+		double *tmpX = (double*) malloc( subDim * sizeof(double) ) ; 
+		for( i = 0 ; i < k ; i++ ) // calc invSqrtSig  
+		{ 
+			psdEig ( &cov[ subDim * subDim * i ] , &subDim , &eps , tmpEigMat , tmpEigVec ) ; 
+			for( j = 0 ; j < subDim ; j++ ) 
+			{ 
+				for( l = 0 ; l < subDim ; l++ ) 
+					invSqrtSig[ j + subDim * l + subDim * subDim * i ] = tmpEigMat[ j + subDim * l ] / sqrt( tmpEigVec[ l ] ) ; 
+			} 
+		} 
+		
 		double min , dtmp ; 
 		for( i = 0 ; i < gmKmersN ; i++ ) // cycle thru metagenomic points for classification 
-		{
+		{ 
+			/* 
 			for( j = 0 ; j < k ; j++ ) // cycle thru gaussians 
 			{
 				dtmp = 0.0 ; 
@@ -464,12 +479,21 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 					min = dtmp ; 
 				else if ( min > dtmp ) 
 					min = dtmp ; 
-			}
-			if( min > cut ) 
+			} 
+			*/ 
+			for( j = 0 ; j < subDim ; j++ ) 
+				tmpX[j] = gmC[ i + gmKmersN * j ] ; 
+			min = calcStat ( tmpX , &k , &subDim , mu , invSqrtSig ) ; 
+			
+			if( min > malahanobisMultiple*cut ) 
 				kmerStatus[i] = 0 ; 
 			else
 				kmerStatus[i] = 1 ; 
-		}
+		} 
+		free( invSqrtSig ) ; 
+		free( tmpEigMat ) ; 
+		free( tmpEigVec ) ; 
+		free( tmpX ) ; 
 	}
 	
 	if( verbose > 0 )
