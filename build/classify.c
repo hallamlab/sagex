@@ -219,7 +219,9 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	double *standardK = (double*) malloc( cols * rows * sizeof(double) ) ; 
 	double *means = (double*) malloc( cols * sizeof(double) ) ; 
 	double *vars = (double*) malloc( cols * sizeof(double) ) ; 
-	colStandardize( bigK , &rows , &cols , standardK ) ; 
+	colStandardize( bigK , &gmKmersN , &rows , &cols , standardK ) ; // TODO Transform w.r.t. gm only! // CHANGE MADE BUT CAUSES FAILURE OF CONV. IN ANDYW.  
+fprintf( stderr , "DEBUG 1: %f\n" , *bigK ) ; 
+fprintf( stderr , "DEBUG 2: %f\n" , *standardK ) ; 
 	
 	/*
 	{int k , l ; 
@@ -234,7 +236,11 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 		fprintf( stderr , "Calculating correlation matrix\n" ) ;
 	// calculate correlation matrix 
 	double *corr = (double*) malloc( cols * cols * sizeof(double) ) ; 
-	corrMat ( standardK , &gmKmersN , &cols , corr ) ; // Calculate PCA basis using GM only!  
+	corrMat ( standardK , &gmKmersN , &rows , &cols , corr ) ; // Calculate PCA basis using GM only! // TODO I expect the error to come from here   
+// fprintf( stderr , "DEBUG 3: %f\n" , *corr ) ; 
+// double *TMP = (double*) malloc( cols * cols * sizeof(double) ) ; chol( corr , &cols , TMP ) ; double dett = 1.0 ; for( i = 0 ; i < cols ; i++ ){ dett *= TMP[ i + cols * i ] ; } fprintf( stderr , "DEBUG 4: Approximate determinant: %e\n" , dett*dett ) ; free( TMP ) ; 
+//int ii ; int nans = 0 ; for( ii = 0 ; ii < cols * cols ; ii++ ){ if( corr[ii] != corr[ii] ) nans++ ; } fprintf( stderr , "DEBUG 4: nans: %i\n" , nans ) ; 
+// double dett ; det( corr , &cols , &dett ) ; fprintf( stderr , "DEBUG: det: %e\n" , dett ) ; 
 	
 	/*
 	for( i = 0 ; i < cols ; i++ ) 
@@ -252,6 +258,9 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	double *eigVals = (double*) malloc( cols * sizeof(double) ) ; 	
 	// powerIteration ( corr , &cols , &subDim , &eigenEps , eigVals , eigVecs , &threads ) ;  
 	psdEig ( corr , &cols , &eigenEps , eigVecs , eigVals ) ; 
+// double tmpSum = 0.0 ; for( i = 0 ; i < cols ; i++ ) tmpSum += eigVals[i] ;
+// fprintf( stderr , "DEBUG 5: sum: %e" , tmpSum ) ; for( i = 0 ; i < cols ; i++ ) fprintf( stderr , " %e" , eigVals[i] ) ; fprintf( stderr , "\n" ) ; 
+// fprintf( stderr , "DEBUG 6: %f\n" , *eigVecs ) ; 
 	
 	/*
 	printf( "Eigen values: " ) ; 

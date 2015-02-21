@@ -33,10 +33,12 @@
 void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minLength , int maxIter , int chopSize , int overlap , int proportion, int k , int fixK , double malahanobisMultiple , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output , int lcsCut ) ; 
 
 // Standardizes the columns of a matrix 
-void colStandardize( double *mat , int *rows , int *cols , double *out ) ; 
+// subRows : <= rows, standardizes w.r.t. first 'subRows' rows  
+void colStandardize( double *mat , int*subRows , int *rows , int *cols , double *out ) ; 
 
 // out : enough space for dims X dims doubles 
-void corrMat ( double *mat , int *n , int *dims , double *out ) ; 
+// subN : use only the first subN of n data to calculate the correlation matrix  
+void corrMat ( double *mat , int *subN , int *n , int *dims , double *out ) ; 
 
 void covMat ( double *mat , int *n , int *dims , double *mean , double *cov ) ; 
 

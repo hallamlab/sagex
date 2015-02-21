@@ -600,15 +600,26 @@ void chol ( double *in , int *n , double *out )
 				out[ i + *n * j ] = 0.0 ; 
 			}
 			else
-			{
+			{ 
 				tmp = in[i + *n * j] ; 
 				if( i == j ) 
 				{
 					for( k = 0 ; k < j ; k++ )
 					{
 						tmp -= out[ i + *n * k ] * out[ i + *n * k ] ; 
+					} 
+					if( tmp < 0 ) 
+					{ 
+						if( i == *n - 1 ) 
+							out[ i + *n * j ] = 0.0 ; // likely due to roundoff 
+						else 
+						{ 
+							fprintf( stderr , "WARNING: Cholesky failed!\n" ) ; 
+							return ; 
+						} 
 					}
-					out[ i + *n * j ] = sqrt(tmp) ; 
+					else  
+						out[ i + *n * j ] = sqrt(tmp) ; 
 				}
 				else
 				{
@@ -1028,7 +1039,7 @@ void householder ( double *x , int *rows , int *col , double *u , double *v )
 // Eigen calculator for PSD matrices 
 // x : column-major order n X n PSD matrix 
 // eps : convergence term 
-// q : space for n X n doubles for eigenvectors, if null the algorithm will be sped up but no eigenvectors will be returned 
+// q :kspace for n X n doubles for eigenvectors, if null the algorithm will be sped up but no eigenvectors will be returned 
 // vals : space for n doubles for eigenvalues 
 void psdEig ( double *x , int *n , double *eps , double *q , double *vals ) 
 {
@@ -1110,7 +1121,15 @@ double prevErr ; // TODO replace this with pivoting !!!
 			for( j = 0 ; j < i-1 ; j++ ) 
 			{
 				if( i > 1 ) 
-					givens ( &xx , &yy , &c , &s ) ; 
+				{ 
+					if( xx != 0.0 || yy != 0.0  ) 
+						givens ( &xx , &yy , &c , &s ) ; 
+					else 
+					{  
+						c = 0.0 ; 
+						s = 0.0 ; 
+					} 
+				} 
 				else 
 				{
 					t = 0.5 * atan( 2.0 * y[*n] / ( y[ 1 + *n ] - y[0] ) ) ; 
@@ -1118,6 +1137,7 @@ double prevErr ; // TODO replace this with pivoting !!!
 					s = sin(t) ; 
 				}
 				w = c * xx - s * yy ; 
+// if( i == 200 ) fprintf( stderr , "DEBUG: w: %e, c: %e, s: %e, xx: %e, yy: %e\n" , w , c , s , xx , yy ) ; 
 				d = y[ j + *n * j ] - y[ j+1 + *n * (j+1) ] ; 
 				z = s * ( 2.0 * c * y[ j + *n * (j+1) ] + d * s ) ; 
 				y[ j + *n * j ] = y[ j + *n * j ] - z ; 
@@ -1132,7 +1152,9 @@ double prevErr ; // TODO replace this with pivoting !!!
 				}
 				if( j < i-1 ) 
 				{ 
+// if( i == 200 ) fprintf( stderr , "DEBUG cont'd: y[j,j+1]: %e, y[j+1,j+2]: %e\n" , y[ j + *n * (j+1) ] , y[ j+1 + *n * (j+2) ] ) ; 
 					yy = -s * y[ j+1 + *n * (j+2) ] ;   
+// if( -s > 0.0 && y[ j+1 + *n * (j+2) ] > 0.0 && yy == 0.0 ) yy = ( -s < y[ j+1 + *n * (j+2) ] ) ? -s : y[ j+1 + *n * (j+2) ] ; // approximate in case of round-off 
 					y[ j+1 + *n * (j+2) ] = c * y[ j+1 + *n * (j+2) ] ; 
 					y[ j+2 + *n * (j+1) ] = y[ j+1 + *n *(j+2) ] ;  
 					// yy = -s * y[ j+1 + *n * (j+2) ] ; 
@@ -1160,8 +1182,9 @@ double prevErr ; // TODO replace this with pivoting !!!
 			}
 			// calculate convergence errors 
 			err = fabs( y[ i-1 + *n * i ] ) / ( fabs( y[ i-1 + *n * (i-1) ] ) + fabs( y[ i + *n * i ] ) ) ; 
-// fprintf( stderr , "DEBUG: err: %e, i: %i\n" , err , i ) ; 
-		}
+// if( i == 200 ) fprintf( stderr , "DEBUG: err: %e, i: %i\n" , err , i ) ; 
+		} 
+// fprintf( stderr , "DEBUG: val[%i]: %e, remaining: " , i , y[ i + *n * i ] ) ; for( j = i-1 ; j >= 0 ; j-- ) fprintf( stderr , " %e" , y[j + *n * j] ) ; fprintf( stderr , "\n" ) ;  
 	}
 	
 	// eigenvalues are stored on diagonal 

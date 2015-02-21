@@ -5,7 +5,8 @@
 #include <math.h>
 
 // Standardizes the columns of a matrix 
-void colStandardize( double *mat , int *rows , int *cols , double *out )
+// subRows : <= rows, standardizes w.r.t. first 'subRows' rows  
+void colStandardize( double *mat , int*subRows , int *rows , int *cols , double *out )
 {
         int i , j ; 
 	double mean , var ; 
@@ -13,12 +14,12 @@ void colStandardize( double *mat , int *rows , int *cols , double *out )
         {
                 mean = 0.0 ;
                 var = 0.0 ;
-                for( j = 0 ; j < *rows ; j++ )
+                for( j = 0 ; j < *subRows ; j++ )
                         mean += mat[ j + *rows * i ] ;
-                mean = mean / ((double) *rows) ;
-                for( j = 0 ; j < *rows ; j++ )
+                mean = mean / ((double) *subRows) ;
+                for( j = 0 ; j < *subRows ; j++ )
                         var += ( mat[j + *rows * i] - mean  ) * ( mat[j + *rows * i] - mean ) ;
-                var = var / ((double) (*rows - 1) ) ;
+                var = var / ((double) (*subRows - 1) ) ;
 
                 for( j = 0 ; j < *rows ; j++ )
                         out[ j + *rows * i ] = (mat[ j + *rows * i ] - mean ) / sqrt(var) ; 
@@ -26,7 +27,8 @@ void colStandardize( double *mat , int *rows , int *cols , double *out )
 }
 
 // out : enough space for dims X dims doubles 
-void corrMat ( double *mat , int *n , int *dims , double *out )
+// subN : use only the first subN of n data to calculate the correlation matrix  
+void corrMat ( double *mat , int *subN , int *n , int *dims , double *out )
 {
 	int i , j , k ; 
 	double *m = (double*) malloc( *dims * sizeof(double) ) ; // array of means 
@@ -34,25 +36,25 @@ void corrMat ( double *mat , int *n , int *dims , double *out )
 	for( i = 0 ; i < *dims ; i++ ) // calc means 
 	{
 		m[i] = 0.0 ; 
-		for( j = 0 ; j < *n ; j++ ) 
+		for( j = 0 ; j < *subN ; j++ ) 
 			m[i] += mat[ j + *n * i ] ;   
-		m[i] = m[i] / ((double) *n ) ; 
+		m[i] = m[i] / ((double) *subN ) ; 
 	}
 	for( i = 0 ; i < *dims ; i++ ) // calc vars 
 	{
 		v[i] = 0.0 ; 
-		for( j = 0 ; j < *n ; j++ )
+		for( j = 0 ; j < *subN ; j++ )
 			v[i] += ( mat[j + *n * i] - m[i] ) * ( mat[j + *n * i] - m[i] ) ; 
-		v[i] = v[i] / ((double) *n - 1 ) ; 
+		v[i] = v[i] / ((double) *subN - 1 ) ; 
 	}
 	for( i = 0 ; i < *dims ; i++ ) // calc corrs 
 	{
 		for( j = 0 ; j < *dims ; j++ ) 
 		{
 			out[ i + *dims * j ] = 0.0 ; 
-			for( k = 0 ; k < *n ; k++ ) 
+			for( k = 0 ; k < *subN ; k++ ) 
 				out[ i + *dims * j ] += ( mat[k + *n * i] - m[i] ) * ( mat[k + *n * j] - m[j] ) ; 
-			out[ i + *dims * j ] = out[ i + *dims * j ] / ( sqrt( v[i] * v[j] ) * ((double) *n - 1 ) ) ; 
+			out[ i + *dims * j ] = out[ i + *dims * j ] / ( sqrt( v[i] * v[j] ) * ((double) *subN - 1 ) ) ; 
 		}
 	}
 	free( m ) ; 
