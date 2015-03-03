@@ -220,8 +220,6 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	double *means = (double*) malloc( cols * sizeof(double) ) ; 
 	double *vars = (double*) malloc( cols * sizeof(double) ) ; 
 	colStandardize( bigK , &gmKmersN , &rows , &cols , standardK ) ; // TODO Transform w.r.t. gm only! // CHANGE MADE BUT CAUSES FAILURE OF CONV. IN ANDYW.  
-fprintf( stderr , "DEBUG 1: %f\n" , *bigK ) ; 
-fprintf( stderr , "DEBUG 2: %f\n" , *standardK ) ; 
 	
 	/*
 	{int k , l ; 
