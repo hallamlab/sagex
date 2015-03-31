@@ -14,7 +14,7 @@ pelag = read.table("pelagErrs1.tsv",row.names=NULL)[,-1]
 
 Plotting functions
 ```{r}
-ppv = function(errs,orgStr)
+ppv = function(errs,orgStr,...)
 {
 idx = 2*(1:156)-1
 PPV = errs[idx,]
@@ -25,9 +25,9 @@ Sens = errs[idx, 4 ] / rowSums(errs[ idx , 4:5 ])
 SensD1K2 = Sens[ (errs[idx,2] == 2) * (errs[idx,3] == 1) > 0 ]
 SensD2K2 = Sens[ (errs[idx,2] == 2) * (errs[idx,3] == 2) > 0 ]
 SensD3K2 = Sens[ (errs[idx,2] == 2) * (errs[idx,3] == 3) > 0 ]
-plot( 15:40 , PPVD1K2 , ylim=c(0,1) , type='l' , ylab="%" , xlab="identity filter stringency" , main=paste(orgStr,"PPV (lines), Sensitivity (points)\nTwo clusters\nD=1 (black), 2 (red), 3 (blue)") ) 
-lines( 15:40 , PPVD2K2 , col="red" ) 
-lines( 15:40 , PPVD3K2 , col="blue" ) 
+plot( 15:40 , PPVD1K2 , ylim=c(0,1) , type='l' , ylab="%" , xlab="identity filter stringency" , main=paste(orgStr,"PPV (lines), Sensitivity (points)\nTwo clusters\nD=1 (black), 2 (red), 3 (blue)") , ... ) 
+lines( 15:40 , PPVD2K2 , col="red" , ... ) 
+lines( 15:40 , PPVD3K2 , col="blue" , ... ) 
 points( 15:40 , SensD1K2 )
 points( 15:40 , SensD2K2 , col="red" )
 points( 15:40 , SensD3K2 , col="blue" )
@@ -44,9 +44,9 @@ Sens = errs[idx, 5 ] / rowSums(errs[ idx , 4:5 ])
 SensD1K2 = Sens[ (errs[idx,2] == 2) * (errs[idx,3] == 1) > 0 ]
 SensD2K2 = Sens[ (errs[idx,2] == 2) * (errs[idx,3] == 2) > 0 ]
 SensD3K2 = Sens[ (errs[idx,2] == 2) * (errs[idx,3] == 3) > 0 ]
-plot( 15:40 , PPVD1K2 , ylim=c(0.975,1) , type='l' , ylab="%" , xlab="identity filter stringency" , main=paste(orgStr,"NPV (lines), Specificity (points)\nTwo clusters\nD=1 (black), 2 (red), 3 (blue)") ) 
-lines( 15:40 , PPVD2K2 , col="red" ) 
-lines( 15:40 , PPVD3K2 , col="blue" ) 
+plot( 15:40 , PPVD1K2 , ylim=c(0.975,1) , type='l' , ylab="%" , xlab="identity filter stringency" , main=paste(orgStr,"NPV (lines), Specificity (points)\nTwo clusters\nD=1 (black), 2 (red), 3 (blue)") , ... ) 
+lines( 15:40 , PPVD2K2 , col="red" , ... ) 
+lines( 15:40 , PPVD3K2 , col="blue" , ... ) 
 points( 15:40 , SensD1K2 )
 points( 15:40 , SensD2K2 , col="red" )
 points( 15:40 , SensD3K2 , col="blue" )
