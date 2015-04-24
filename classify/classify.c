@@ -25,7 +25,7 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 	int subDim = 3 ; 
 	int cols = 256 ; 
 	int rows = gmN + sagN ; 
-	int tmp ; 
+	// int tmp ; 
 	int *names = (int*) malloc( gmN * sizeof(int) ) ; // never freed 
 	int *sagNamesIdx = (int*) malloc( sagN * sizeof(int) ) ; // never freed 
 	double eigenEps = eps * 0.1 ;  
@@ -472,7 +472,7 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 			} 
 		} 
 		
-		double min , dtmp ; 
+		double min ; // , dtmp ; 
 		for( i = 0 ; i < gmKmersN ; i++ ) // cycle thru metagenomic points for classification 
 		{ 
 			/* 
@@ -564,7 +564,7 @@ void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , 
 				else // identity filter is active   
 				{ 
 					// TODO use binary search 
-					for( j = 0 ; j < idenHitsN && hits[i] == 0 ; j++ ) 
+					for( j = 0 ; ((size_t) j) < idenHitsN && hits[i] == 0 ; j++ ) 
 					{ 
 						if( idenHits[j] == i ) 
 							hits[i] = 1 ;  

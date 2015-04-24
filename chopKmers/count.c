@@ -10,7 +10,7 @@
 void kmerCounter ( char *nucs , int maxLen , int *out ) 
 {
 	int s ; 
-    	for(int s=0; s < 256; s++)
+    	for(s=0; s < 256; s++)
 		out[s]=0;
     	
     	unsigned int indx = 0, j =0; 

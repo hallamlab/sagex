@@ -71,7 +71,7 @@ void recordWorkItems( int *sub , int n , int workN , int *lengths , int chopSize
 		while( k + chopSize <= lengths[ sub[i] ] ) 
 		{
 			if( j >= workN ) 
-				fprintf( stderr , "ERROR: chopKmers: recordWorkItems: Allocation overflow!\n" , j , workN ) ; 
+				fprintf( stderr , "ERROR: chopKmers: recordWorkItems: Allocation overflow!\n" ) ; 
 			
 			seq[j] = sub[i] ; // NOTE THAT SUB IS NO LONGER NEEDED AFTER THIS POINT 
 			loc[j] = k ; 

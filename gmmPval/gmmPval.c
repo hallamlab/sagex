@@ -224,7 +224,7 @@ void getGMMQuantile ( double *q , double *p , double *mu , double *sig , int *n 
 	} 
 	
 	// calculate minimum distances  
-	double dist, min ; 
+	// double dist, min ; 
 	for( i = 0 ; i < *n ; i++ ) 
 	{ 
 		/* 

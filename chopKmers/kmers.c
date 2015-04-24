@@ -26,6 +26,7 @@ void *pCount( void *arg )
 		for( j = 0 ; j < 256 ; j++ ) 
 			karg->out[ i + karg->N * j ] = karg->tmp[j] ; 
 	}
+	return NULL ; 
 }
 
 // Counts kmer vectors for a fasta file 

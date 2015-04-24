@@ -82,7 +82,7 @@ void kmeans ( double *x , int *d , int *n , int *k , double *p , double *mu , do
 	double *errList = (double*) malloc( *k * sizeof(double) ) ; 
 	
 	double err = *eps + 1.0 ; 
-	int i , j , l , h , g , winner ; 
+	int i , j , l , g , winner ; 
 	double tmp ; 
 	for( i = 0 ; i < *maxIter && err > *eps ; i++ ) 
 	{

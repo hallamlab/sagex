@@ -97,6 +97,7 @@ int BlastTable::parseTable() {
     }
     free(fields);
     N_hits = x;
+    exit(-1) ; 
 }
 
 int BlastTable::validateLine(int line_Nelements) {

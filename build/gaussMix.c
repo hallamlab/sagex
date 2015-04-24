@@ -263,7 +263,7 @@ void matProdTr ( double *a , double *b , int *p , int *q , int *r , double *out 
 void nextSig ( double *x , int *n , int *d , int *k , double *pMat , double *mu , double *out ) 
 {
 	int i , j , l , h ; 
-	int one = 1 ; 
+	// int one = 1 ; 
 	double denom ; 
 	double *tmpMat = (double*) malloc( *d * *d * sizeof(double) ) ; 
 	for( j = 0 ; j < *k ; j++ ) // cycle through sigmas 

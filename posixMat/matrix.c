@@ -917,7 +917,7 @@ void powerIteration( double *mat , int *n , int *m , double *eps , double *val ,
 	
 	memcpy( tmpMat , mat , *n * *n * sizeof(double) ) ; 
 	
-	int i , j , k ; 
+	int i ; // , j , k ; 
 	for( i = 0 ; i < *m ; i++ ) 
 	{
 		/* 

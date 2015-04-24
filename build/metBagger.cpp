@@ -94,4 +94,5 @@ int metBagger::get_Gm_scaffolds(char **sseqid, double *pidents, int *lengths, in
         free(sseqid);
     }
     Bag(NR_scaffolds, headers, sequences, MetaG_N_contigs);
+    exit(0) ; 
 }

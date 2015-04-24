@@ -308,7 +308,7 @@ void identityFilter ( char **sag , int sagN , char **gm , int gmN , int cut , in
 			{ 
                         	tmpT = strlen( sag[i] ) ; 
                         	lengths[i] = tmpT ; 
-                        	if( tmpT > minLength ) 
+                        	if( tmpT > (size_t) minLength ) 
                         	{   
                         	        *gmSubSetN += tmpT ; 
                         	        listN += tmpT - cut + 1 ; 
@@ -321,7 +321,7 @@ void identityFilter ( char **sag , int sagN , char **gm , int gmN , int cut , in
                 *gmSubSetN = 0 ;   
                 for( i = 0 ; i < sagN ; i++ ) 
                 {   
-                        if( lengths[i] > minLength ) 
+                        if( lengths[i] > (size_t) minLength ) 
                         {   
                                 // record entries 
                                 sHashes ( sag[i] , hashKeySize , &(dictionary[*gmSubSetN]) , preKeySize , lastKeySize , NULL , NULL , 0 ) ; 
@@ -348,7 +348,7 @@ void identityFilter ( char **sag , int sagN , char **gm , int gmN , int cut , in
 			if( gm[i] != NULL ) // Jerry rigged robustness TODO strings should NEVER be null !!! 
 			{ 
                         	lengths[i] = strlen( gm[i] ) ;
-                        	if( lengths[i] > tmp )
+                        	if( lengths[i] > (size_t) tmp )
                         	        tmp = lengths[i] ; 
 			} 
 			else 
@@ -362,7 +362,7 @@ void identityFilter ( char **sag , int sagN , char **gm , int gmN , int cut , in
                 *gmSubSetN = 0 ;
                 for( i = 0 ; i < gmN ; i++ )
                 {
-                        if( lengths[i] > minLength )
+                        if( lengths[i] > (size_t) minLength )
                         {
                                 tmp = sHashes ( gm[i] , hashKeySize , hashTmp , preKeySize , lastKeySize , dictionary , idx , listN ) ;
                                 if( tmp > 0 )

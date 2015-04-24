@@ -71,6 +71,7 @@ int checkArgs(int hFlag, int errFlag, char *input, char *Gm, char *blastout, int
         cerr << "have not been included!" << endl << usage << endl;
         exit(3);
     }
+    //exit(0) ;  
 }   
 
 int *map_chops(char ** metBag_header, int metBag_Ncontigs) {
@@ -151,7 +152,7 @@ int main( int argc, char *argv[] ) {
                     chopSize = atoi(optarg);
                 break;
             case 'x':
-                if (proportionFlag = 1) {
+                if (proportionFlag == 1) {
                     proportionFlag = -1;
                     errFlag++;
                 }
