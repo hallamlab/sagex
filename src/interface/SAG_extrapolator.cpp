@@ -1,12 +1,13 @@
-#include "parse_Blastoutput.hpp"
+//#include "parse_Blastoutput.hpp"
+//#include "metBagger.hpp"
 #include "FastaParser.hpp"
-#include "metBagger.hpp"
 #include "Genome.hpp"
 #include "classify.h"
 #include "matrix.h"
 #include "gammaDist.h"
+#include <getopt.h>
 
-int checkArgs(int hFlag, int errFlag, char *input, char *Gm, char *blastout, int argc) {
+void checkArgs(int hFlag, int errFlag, char *input, char *Gm, char *blastout, int argc) {
     string usage = "\nUSAGE: \t ./sagex [options] -i sag.fasta -G metagenome.fasta";
     string help = "\nHelp description:\n\
 -i: \n \
@@ -73,7 +74,7 @@ int checkArgs(int hFlag, int errFlag, char *input, char *Gm, char *blastout, int
     }
     //exit(0) ;  
 }   
-
+/*
 int *map_chops(char ** metBag_header, int metBag_Ncontigs) {
     int *metBag_headerMap = (int *) malloc (metBag_Ncontigs * sizeof(int));
     int c, n;
@@ -90,7 +91,7 @@ int *map_chops(char ** metBag_header, int metBag_Ncontigs) {
     }
     return metBag_headerMap;
 }
-
+*/
 int main( int argc, char *argv[] ) {
     
     char *input = NULL;
@@ -100,8 +101,8 @@ int main( int argc, char *argv[] ) {
     char *kmerPCA = NULL; 
     char *kmerFreq = NULL; 
     int k = 1;
-    int pID = 85;
-    int minAL = 2000;
+    //int pID = 85;
+    //int minAL = 2000;
     int chopSize = 2000;
     int overlap = 500;
     double Alpha = 0.05;
@@ -116,7 +117,7 @@ int main( int argc, char *argv[] ) {
     int K = -1 ; 
     int c, errFlag, verbose, proportionFlag, hFlag;
     errFlag = verbose = proportionFlag = hFlag = opterr = 0;
-    while ((c = getopt (argc, argv, "i:G:b:o:p:a:c:x:A:B:E:m:M:t:k:X:Y:C:D:s:hPvK")) != -1) {
+    while ((c = getopt (argc, argv, "i:G:b:o:c:x:A:B:E:m:M:t:k:X:Y:C:D:s:hPvK")) != -1) {
         switch (c) {
             case 'i':
                 input = optarg;
@@ -133,14 +134,16 @@ int main( int argc, char *argv[] ) {
 	    case 'K':
 		K = 1; 
 		break; 
+/*
             case 'p':
                 pID = atoi(optarg);
                 break;
-            case 'C':
-                lcsCut = atoi(optarg) ; 
-                break;
             case 'a':
                 minAL = atoi(optarg);
+                break;
+*/
+            case 'C':
+                lcsCut = atoi(optarg) ; 
                 break;
             case 'o':
                 output = optarg;
@@ -225,7 +228,7 @@ int main( int argc, char *argv[] ) {
     FastaParser SAG(input); 
     SAG.parse_fasta(); 
     //cout << "SAG size = " << SAG.genome_length << endl;
-    
+/*    
     metBagger metBag;
     
     if (blastout != NULL) {
@@ -242,12 +245,13 @@ int main( int argc, char *argv[] ) {
     else {
         // metBag.get_Gm_scaffolds(NULL, NULL, NULL, 0, Metagenome.header, Metagenome.sequence, Metagenome.N_contigs, pID, minAL);
         metBag.header = Metagenome.header ; 
-	    metBag.sequence = Metagenome.sequence ; 
-	    metBag.N_contigs = Metagenome.N_contigs ; 
-	    metBag.genome_length = Metagenome.genome_length ; 
-	    // cout << "Passed get_Gm_scaffolds" << endl;
+	metBag.sequence = Metagenome.sequence ; 
+	metBag.N_contigs = Metagenome.N_contigs ; 
+	metBag.genome_length = Metagenome.genome_length ; 
+	// cout << "Passed get_Gm_scaffolds" << endl;
     }
-	/*
+
+	
 printf( "DEBUG chopping Gm...\n" ) ; 
         Chopper chopped_metBag(chopSize, overlap);
         chopped_metBag.chop_scaffolds(metBag.header, metBag.sequence, metBag.N_contigs);
@@ -265,7 +269,7 @@ printf( "DEBUG chopping SAG...\n" ) ;
 	else
 		hitPtr = &hits ;
 
-    classify ( SAG.sequence , SAG.N_contigs , SAG.header , metBag.sequence , metBag.N_contigs , metBag.header , Alpha , Beta , threads , eps , itLen , itMax , chopSize , overlap , proportionFlag , k , K , D , verbose , kmerFreq , kmerPCA , hitPtr , output , lcsCut );
+    classify ( SAG.sequence , SAG.N_contigs , SAG.header , Metagenome.sequence , Metagenome.N_contigs , Metagenome.header , Alpha , Beta , threads , eps , itLen , itMax , chopSize , overlap , proportionFlag , k , K , D , verbose , kmerFreq , kmerPCA , hitPtr , output , lcsCut );
 	 
 	return 0 ; 
 }
