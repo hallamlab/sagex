@@ -1,4 +1,5 @@
 classErrs/tmp*
-build/*
-sagex
+./sagex
 tmp/*
+.gitignore
+.DS_Store

@@ -1,5 +1,3 @@
-//#include "parse_Blastoutput.hpp"
-//#include "metBagger.hpp"
 #include "FastaParser.hpp"
 #include "Genome.hpp"
 #include "classify.h"
@@ -101,8 +99,6 @@ int main( int argc, char *argv[] ) {
     char *kmerPCA = NULL; 
     char *kmerFreq = NULL; 
     int k = 1;
-    //int pID = 85;
-    //int minAL = 2000;
     int chopSize = 2000;
     int overlap = 500;
     double Alpha = 0.05;
@@ -134,14 +130,6 @@ int main( int argc, char *argv[] ) {
 	    case 'K':
 		K = 1; 
 		break; 
-/*
-            case 'p':
-                pID = atoi(optarg);
-                break;
-            case 'a':
-                minAL = atoi(optarg);
-                break;
-*/
             case 'C':
                 lcsCut = atoi(optarg) ; 
                 break;
@@ -228,40 +216,7 @@ int main( int argc, char *argv[] ) {
     FastaParser SAG(input); 
     SAG.parse_fasta(); 
     //cout << "SAG size = " << SAG.genome_length << endl;
-/*    
-    metBagger metBag;
-    
-    if (blastout != NULL) {
 
-        BlastTable blastclass(blastout); 
-        blastclass.parseTable(); 
-    
-        free(blastclass.qseqid); 
-
-        metBag.get_Gm_scaffolds(blastclass.sseqid, blastclass.pident, blastclass.length, blastclass.N_hits, Metagenome.header, Metagenome.sequence, Metagenome.N_contigs, pID, minAL);
-	
-        //cout << "MetBag size = " << metBag.genome_length << endl;
-    }
-    else {
-        // metBag.get_Gm_scaffolds(NULL, NULL, NULL, 0, Metagenome.header, Metagenome.sequence, Metagenome.N_contigs, pID, minAL);
-        metBag.header = Metagenome.header ; 
-	metBag.sequence = Metagenome.sequence ; 
-	metBag.N_contigs = Metagenome.N_contigs ; 
-	metBag.genome_length = Metagenome.genome_length ; 
-	// cout << "Passed get_Gm_scaffolds" << endl;
-    }
-
-	
-printf( "DEBUG chopping Gm...\n" ) ; 
-        Chopper chopped_metBag(chopSize, overlap);
-        chopped_metBag.chop_scaffolds(metBag.header, metBag.sequence, metBag.N_contigs);
-
-printf( "DEBUG chopping SAG...\n" ) ; 
-        Chopper chopped_SAG(chopSize, overlap);
-        chopped_SAG.chop_scaffolds(SAG.header, SAG.sequence, SAG.N_contigs);
-	
-        int *metBag_headerMap = map_chops(chopped_metBag.header, chopped_metBag.N_contigs);
-    	*/
     int *hits = NULL; 
 	int **hitPtr ; 
 	if( kmerPCA != NULL ) 
