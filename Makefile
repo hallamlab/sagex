@@ -6,7 +6,7 @@
 
 SHELL := /bin/bash -e
 
-export OBJ_DIR = obj#For the compiled object files; deleted after compilaton
+export OBJ_DIR = obj#For the compiled object files
 export SRC_DIR = src#Where the c++ files live
 
 CC=g++
@@ -92,10 +92,11 @@ sagex:
  $(SRC_DIR)/kmeans/kmeans.c \
  $(SRC_DIR)/classify/classify.c \
  $(SRC_DIR)/kbag/kbag.c \
- -pthread $(INC) 
+ -lpthread $(INC) 
 
 clean:
 	@rm -f $(OBJ_DIR)/*.o 
+	@rm ./sagex
 
 test: sagex
 	@./sagex -i test/SAG.fasta -g test/metagenome.fasta
