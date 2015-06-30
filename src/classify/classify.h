@@ -7,6 +7,8 @@
 #include "gaussMix.h"
 #include "gmmPval.h" 
 // #include "lcs.h"
+#include "helper.hpp"
+#include "Fasta.hpp"
 #include "kbag.h" 
 
 // Classifies contigs as IN a SAG 
@@ -30,7 +32,8 @@
 // verbose : describe process in stderr if > 0 
 // kmerFreq : writes kmers to file specified 
 // out : a pointer to be allocated with the int-names of contigs which have been classified as IN the SAG 
-void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minLength , int maxIter , int chopSize , int overlap , int proportion, int k , int fixK , double malahanobisMultiple , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output , int lcsCut ) ; 
+//void classify ( char **sag , int sagN , char **sagNames , char **gm , int gmN , char **gmNames , double alpha , double beta , int threads , double eps , int minLength , int maxIter , int chopSize , int overlap , int proportion, int k , int fixK , double malahanobisMultiple , int verbose , char *kmerFreq , char *kmerPCA, int **out, char *output , int lcsCut ) ;
+void classify(Fasta* sag, Fasta* Metagenome, Options* options, int** out);
 
 // Standardizes the columns of a matrix 
 // subRows : <= rows, standardizes w.r.t. first 'subRows' rows  
