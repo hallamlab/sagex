@@ -2,6 +2,7 @@
 #===========================
 # SAGex Makefile
 # Connor Morgan-Lang 2015
+# Hallam lab, Department of Microbiology and Immunology, UBC
 #===========================
 
 SHELL := /bin/bash -e
@@ -24,7 +25,7 @@ OBJECTS = $(OBJ_DIR)/posixMat.o \
 	$(OBJ_DIR)/kmers.o \
 	$(OBJ_DIR)/recordTasks.o \
 	$(OBJ_DIR)/minLength.o \
-	$(OBJ_DIR)/FastaParser.o \
+	$(OBJ_DIR)/Fasta.o \
 	$(OBJ_DIR)/interface.o 
 
 all: notify_build $(OBJ_DIR) sagex
@@ -79,8 +80,8 @@ $(OBJ_DIR)/minLength.o: $(SRC_DIR)/chopKmers/minLength.c
 $(OBJ_DIR)/interface.o: $(SRC_DIR)/interface/SAG_extrapolator.cpp
 	$(CC) $(CFLAGS) $(SRC_DIR)/interface/SAG_extrapolator.cpp $(INC) -o $@
 
-$(OBJ_DIR)/FastaParser.o: $(SRC_DIR)/interface/FastaParser.cpp $(SRC_DIR)/interface/Genome.cpp
-	$(CC) $(CFLAGS) $(SRC_DIR)/interface/FastaParser.cpp $(INC) -o $@
+$(OBJ_DIR)/Fasta.o: $(SRC_DIR)/interface/Fasta.cpp
+	$(CC) $(CFLAGS) $(SRC_DIR)/interface/Fasta.cpp $(INC) -o $@
 
 sagex: 
 	$(CC) $(CFLAGS) -o $@ $(SRC_DIR)/interface/*.cpp \
@@ -100,4 +101,11 @@ clean:
 
 .PHONY: test
 test: sagex
-	@./test/test_SAGex.sh $(shell pwd)/test
+	./sagex -i test/mock_SAG.fasta -G test/mock_metaG.fasta \
+-t 4 -v -K \
+-X test/kmer20.test.tsv -o test/mock_output.test.fasta -Y test/kmerFrequencies.test.tsv
+	./sagex -i test/mock_SAG.fasta -G test/mock_metaG.fasta \
+-t 2 -v -k 8 -K \
+-o test/mock_output.test.fasta
+	./sagex -i test/mock_SAG.fasta -G test/mock_metaG.fasta -k 1 -o test/mock_output.test.fasta -v
+	@rm test/kmer20.test.tsv test/mock_output.test.fasta test/kmerFrequencies.test.tsv
