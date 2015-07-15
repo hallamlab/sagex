@@ -600,7 +600,7 @@ void classify( Fasta* sag, Fasta* MetaG, Options* options, int **out)
                 fclose(pcaFile); 
         }
 	
-    if (options->output != NULL)
+    if (strlen(options->output) != 0)
     {
         FILE *sagexOut;
         sagexOut = fopen(options->output, "w+");

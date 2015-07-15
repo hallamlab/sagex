@@ -44,8 +44,11 @@ struct Options {
         input = (char *) malloc (100 * sizeof(char)); //TODO:change this to a more informative variable
         Gm = (char *) malloc (100 * sizeof(char));
         output = (char *) malloc (100 * sizeof(char));
+        output[0] = '\0';
         kmerFreq = (char *) malloc (100 * sizeof(char));
+        kmerFreq[0] = '\0';
         kmerPCA = (char *) malloc (100 * sizeof(char));
+        kmerPCA[0] = '\0';
 
         chopSize = 0;
         overlap = 0;

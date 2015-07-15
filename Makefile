@@ -13,6 +13,7 @@ export SRC_DIR = src#Where the c++ files live
 CC=g++
 CFLAGS=-Wall -g #removed '-c'
 INC=-I$(SRC_DIR)/classify -I$(SRC_DIR)/posixMat -I$(SRC_DIR)/gammaDist -I$(SRC_DIR)/chopKmers -I$(SRC_DIR)/gaussMix -I$(SRC_DIR)/gmmPval -I$(SRC_DIR)/kbag -I$(SRC_DIR)/kmeans -I$(SRC_DIR)/interface
+PROG=sagex
 
 OBJECTS = $(OBJ_DIR)/posixMat.o \
 	$(OBJ_DIR)/kmeans.o \
@@ -28,13 +29,7 @@ OBJECTS = $(OBJ_DIR)/posixMat.o \
 	$(OBJ_DIR)/Fasta.o \
 	$(OBJ_DIR)/interface.o 
 
-all: notify_build $(OBJ_DIR) sagex
-
-.PHONY: notify_build
-notify_build:
-	@printf "\t*********************************\n"
-	@printf "\t\t Making SAGex!\n"
-	@printf "\t*********************************\n"
+all: $(OBJ_DIR) $(PROG)
 
 $(OBJ_DIR):
 	@mkdir -p $@
@@ -83,7 +78,10 @@ $(OBJ_DIR)/interface.o: $(SRC_DIR)/interface/SAG_extrapolator.cpp
 $(OBJ_DIR)/Fasta.o: $(SRC_DIR)/interface/Fasta.cpp
 	$(CC) $(CFLAGS) $(SRC_DIR)/interface/Fasta.cpp $(INC) -o $@
 
-sagex: 
+$(PROG):
+	@printf "\t\t Making sagex:\n"
+	@printf "**************************************************\n"
+	@printf "\n"
 	$(CC) $(CFLAGS) -o $@ $(SRC_DIR)/interface/*.cpp \
  $(SRC_DIR)/chopKmers/*.c \
  $(SRC_DIR)/gammaDist/gammaDist.c \
@@ -95,9 +93,10 @@ sagex:
  $(SRC_DIR)/kbag/kbag.c \
  -lpthread $(INC) 
 
+.PHONY: clean
 clean:
 	@rm -f $(OBJ_DIR)/*.o 
-	@rm ./sagex
+	@if [ -f $(PROG) ]; then rm $(PROG); else printf "$(PROG) has not been made.\n"; fi;
 
 .PHONY: test
 test: sagex

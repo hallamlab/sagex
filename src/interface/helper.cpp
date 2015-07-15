@@ -47,7 +47,7 @@ void Options::Print_help() {
 }
 
 void Options::Print_usage(char* arg) {
-    std::cerr << "\nUSAGE: \t" << arg << " [options] -i sag.fasa -G metagenome.fasta" << std::endl;
+    std::cerr << "\nUSAGE: \t" << arg << " [options] -i sag.fasta -G metagenome.fasta" << std::endl;
     return;
 }
 

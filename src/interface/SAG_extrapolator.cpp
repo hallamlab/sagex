@@ -27,5 +27,7 @@ int main( int argc, char *argv[] ) {
 		hitPtr = &hits ;
 
     classify(&SAG, &Metagenome, &options, hitPtr);
+
+    std::cout << "Finished successfully." << std::endl;
 	return 0 ; 
 }
