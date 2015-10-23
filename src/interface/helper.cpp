@@ -15,6 +15,8 @@ void Options::Print_help() {
     -x: \n\
     \tThe number of base-pairs overlapping between each of the chopped contigs. [DEFAULT is proportions]\n\
     \n\t\tClassification and Extrapolation-specific options:\n\
+    -C: \n \ 
+    \tIdentity filter stringency, usually between -1 and 40. [DEFAULT = 24] \n \ 
     -k: \n \
     \tDesired number of Gaussians in the mixture model. [DEFAULT = 2]\n\
     -K: \n \

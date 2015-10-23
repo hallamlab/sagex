@@ -59,7 +59,7 @@ struct Options {
         mahalaMultiple = 1.0 ;
         itLen = 2000;
         itMax = 10000;
-        lcsCut = -1 ;
+        lcsCut = 24 ;
         threads = 1;
         seed = -1 ;
 
