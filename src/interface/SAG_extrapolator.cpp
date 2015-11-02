@@ -28,6 +28,6 @@ int main( int argc, char *argv[] ) {
 
     classify(&SAG, &Metagenome, &options, hitPtr);
 
-    std::cout << "Finished successfully." << std::endl;
+    std::stderr << "Finished successfully." << std::endl;
 	return 0 ; 
 }
