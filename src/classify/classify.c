@@ -335,7 +335,7 @@ void classify( Fasta* sag, Fasta* MetaG, Options* options, int **out)
 			if( options->fixK == false ) // cannot change k ! Abort !
 			{
 				if( options->verbose == true )
-					fprintf( stderr , "ERROR: Gaussian Mixture Model failed to fit! Consider reducing -k or deactivating -K\n" ) ; 
+					fprintf( stderr , "ERROR: Gaussian Mixture Model failed to fit! Consider reducing -k or activating -K\n" ) ; 
 				return ; 
 			} 
 			else 
