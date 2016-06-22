@@ -1,5 +1,0 @@
-classErrs/tmp*
-./sagex
-tmp/*
-.gitignore
-.DS_Store
