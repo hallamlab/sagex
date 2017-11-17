@@ -1,0 +1,3 @@
+To recreate the figure, run the following scripts. 
+1. create_kmers.sh 
+2. create_pca.R (in R) 
