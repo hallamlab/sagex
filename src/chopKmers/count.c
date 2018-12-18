@@ -11,44 +11,44 @@ void kmerCounter ( char *nucs , int maxLen , int *out )
 {
 	int s ; 
     	for(s=0; s < 256; s++)
-		out[s]=0;
-    	
-    	unsigned int indx = 0, j =0; 
+			out[s]=0;
+
+    	unsigned int indx = 0, j = 0;
 	
 	int i ; 
-        for( i = 0 ; *nucs != '\0' && ( maxLen < 1 || i < maxLen ) ; i++ )  
-	{
-       		switch(*nucs) 
+        for( i = 0 ; *nucs != '\0' && ( maxLen < 1 || i < maxLen ) ; i++ )
 		{
-           		case 'A':
-           		case 'a':
-                      		indx = 4*indx + 0;  
-                      		break;
-           		case 'T':
-           		case 't':
-                      		indx = 4*indx + 1;  
-                      		break;
-           		case 'C':
-           		case 'c':
-                      		indx = 4*indx + 2;  
-                      		break;
-           		case 'G':
-           		case 'g':
-                      		indx = 4*indx + 3;  
-                      		break;
-			case 'N': 
-			case 'n': 
-				break ; // skip unknowns 
-           		default:
-                      	j=0;
-			fprintf( stderr , "ERROR: kmerCounter: invalid character: %c, %s\n" , *nucs , nucs ) ; 
-			return ; 
-       		}   
-       		j++;
+       		switch(*nucs)
+       		{
+				case 'A':
+				case 'a':
+					indx = 4*indx + 0;
+					break;
+				case 'T':
+				case 't':
+					indx = 4*indx + 1;
+					break;
+				case 'C':
+				case 'c':
+					indx = 4*indx + 2;
+					break;
+				case 'G':
+				case 'g':
+					indx = 4*indx + 3;
+					break;
+				default:
+					j=-1; // skip unknowns
+					// TODO: track the number of tetranucleotides skipped due to ambiguity characters
+       		}
+
+//			printf("DEBUG: position %d = %c\tindx: %d -> %d\n", i, *nucs, indx, indx % 256);
        		nucs++;
+       		j++;
        		indx = indx % 256;
-       		if( j > 3)
-			out[indx]++;
+       		if( j > 3) {
+//       			printf("Recording %d at %d\n", indx, i);
+				out[indx]++;
+			}
         } // end while
 }
 
